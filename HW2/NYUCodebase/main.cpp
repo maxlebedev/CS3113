@@ -47,32 +47,25 @@ bool collided(const std::array<float, 4> &rect1, const std::array<float, 4> &rec
 }
 
 void HandleCollisions(){
-    const array<float, 4> boxBall = ball->hitBox();
+    const array<float, 4> boxBall = {ball->x, ball->y, ball->width, ball->height};
     const array<float, 4> boxPaddle1 = {paddle->x, paddle->y, paddle->width, paddle->height};
-    //paddle->hitBox();
     const array<float, 4> boxPaddle2 = {paddle2->x, paddle2->y, paddle2->width, paddle2->height};
     
     //Top
-    if (boxBall[1] + boxBall[3] / 2 >= ORTHOTOP){
+    if (boxBall[1] + boxBall[3] / 2 >= ORTHOTOP)
         ball->hitTop();
-    }
-    if (boxPaddle1[1] + boxPaddle1[3] / 2 > ORTHOTOP){
+    if (boxPaddle1[1] + boxPaddle1[3] / 2 > ORTHOTOP)
         paddle->Stop();
-    }
-    if (boxPaddle2[1] + boxPaddle2[3] / 2 > ORTHOTOP){
+    if (boxPaddle2[1] + boxPaddle2[3] / 2 > ORTHOTOP)
         paddle2->Stop();
-    }
     
     //Bottom
-    if (boxBall[1] - boxBall[3] / 2 <= ORTHOBOT){
+    if (boxBall[1] - boxBall[3] / 2 <= ORTHOBOT)
         ball->hitBottom();
-    }
-    if (boxPaddle1[1] - boxPaddle1[3] / 2 < ORTHOBOT){
+    if (boxPaddle1[1] - boxPaddle1[3] / 2 < ORTHOBOT)
         paddle->Stop();
-    }
-    if (boxPaddle2[1] - boxPaddle2[3] / 2 < ORTHOBOT){
+    if (boxPaddle2[1] - boxPaddle2[3] / 2 < ORTHOBOT)
         paddle2->Stop();
-    }
     
     //Right
     if (boxBall[0] - boxBall[2] / 2 >= ORTHORIGHT){
@@ -86,16 +79,11 @@ void HandleCollisions(){
         newGame = true;
     }
     //Paddle 1
-    if (collided(boxBall,boxPaddle1)){
+    if (collided(boxBall,boxPaddle1))
         ball->hitLeftPaddle(boxPaddle1[3], PADDLEHEIGHT);
-    }
-    
     //Paddle 2
-    if (collided(boxBall, boxPaddle2)){
-//        glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
+    if (collided(boxBall, boxPaddle2))
         ball->hitRightPaddle(boxPaddle2[3],PADDLEHEIGHT);
-        
-    }
 }
 
 void Setup(){//Ball* ball, Paddle* paddle,Paddle* paddle2

@@ -9,9 +9,7 @@
 #ifndef Ball_hpp
 #define Ball_hpp
 
-
 #include <stdio.h>
-
 
 #include <SDL_opengl.h>
 #include <SDL_image.h>
@@ -33,20 +31,21 @@ public:
     void Update(float elapsed);
     void Draw();
     
-    const array<float, 4>& hitBox() const;
     void hitRightPaddle(int paddleY, int paddleheight);
     void hitLeftPaddle(int paddleY, int paddleheight);
     void hitTop();
     void hitBottom();
     void reset();
     void launch();
-    
-private:
+
     float x;
     float y;
     
     float width;
     float height;
+
+    
+private:
     
     float xVelocity;
     float yVelocity;

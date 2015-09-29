@@ -8,6 +8,9 @@
 
 #include "Ball.hpp"
 
+#include <iostream>
+using namespace std;
+
 
 Ball::Ball(float x, float y, float height, float width)	:x(x), y(y),width(width), height(height), xVelocity(0.0f), yVelocity(0.0f),
 xAcceleration(1.0f), yAcceleration(1.0f){
@@ -45,11 +48,6 @@ void Ball::Draw(){
     
 }
 
-const std::array<float, 4>& Ball::hitBox()const{
-    std::array<float, 4> stuff = { x, y, width, height };
-    return stuff;
-}
-
 //Play around
 void Ball::hitTop(){
     yVelocity = -std::abs(yVelocity);
@@ -67,12 +65,14 @@ void Ball::hitRightPaddle(int paddleY,int paddleheight){
     float relativeIntersectY = (paddleY+(paddleheight/2)) - y;
     float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
     float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
-    
+    std::cout << "bounceAngle: " << bounceAngle << std::endl;
     //TODO use bounceangle
     //xVelocity = xVelocity* cos(bounceAngle);
     //yVelocity = xVelocity*sin(bounceAngle)*-1;
-    xVelocity = -1.5f;
-    yVelocity = 1.5f;
+    //xVelocity = cos(bounceAngle);
+    //yVelocity = -1 * sin(bounceAngle);
+    xVelocity = -1.0f * (((float)rand()) / (float)RAND_MAX);
+    //yVelocity = 1.5f;
 
 }
 
@@ -82,7 +82,7 @@ void Ball::hitLeftPaddle(int paddleY,int paddleheight){
     float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
     //xVelocity = xVelocity* cos(bounceAngle);
     //yVelocity = xVelocity*sin(bounceAngle)*-1;
-    xVelocity = 1.5f;
+    xVelocity = 1.0f * (((float)rand()) / (float)RAND_MAX);
     yVelocity = 1.5f;
     
 }

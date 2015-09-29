@@ -34,7 +34,7 @@ void Paddle::Draw(){
 //    TR, width / 2, -height / 2,
 //    BR width / 2, height / 2
         
-    std::cout << "y: " << y << " x: "<< x << " width: "<< width << " height: " <<height << std::endl;
+    //std::cout << "y: " << y << " x: "<< x << " width: "<< width << " height: " <<height << std::endl;
 
     glVertexPointer(2, GL_FLOAT, 0, points);
     glEnableClientState(GL_VERTEX_ARRAY);
