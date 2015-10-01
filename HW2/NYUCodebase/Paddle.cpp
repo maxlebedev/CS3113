@@ -18,32 +18,37 @@ void Paddle::Update(float timeElapsed){
     yAcceleration *= 0.99;
 }
 
-void Paddle::Draw(){
+void Paddle::Draw(ShaderProgram program,GLuint paddleTextureID){
+    float paddleSizeX = 0.050f;
+    float paddleSizeY = 0.10f;
+    float vertices[] = {-1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, 1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, -1*paddleSizeY};
+    vertices[0] += x;
+    vertices[1] += y;
+    vertices[2] += x;
+    vertices[3] += y;
+    vertices[4] += x;
+    vertices[5] += y;
+    vertices[6] += x;
+    vertices[7] += y;
+    vertices[8] += x;
+    vertices[9] += y;
+    vertices[10] += x;
+    vertices[11] += y;
     
-    glMatrixMode(GL_MODELVIEW);
+    glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+    glEnableVertexAttribArray(program.positionAttribute);
     
-    glLoadIdentity();
-    glTranslatef(x, y, 0);
-    glScalef(1.0, 1.0, 1.0);
+    float texCoords[] = {0.0, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+    glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+    glEnableVertexAttribArray(program.texCoordAttribute);
     
-    
-    //TODO position of these things waay off
-    GLfloat points[] = { -width / 2, -height / 2,width / 2, height / 2,width / 2, -height / 2,-width / 2, -height / 2, width / 2, height / 2, -width / 2, height / 2};
-//    TL -width / 2, height / 2,
-//    BL -width / 2, -height / 2,
-//    TR, width / 2, -height / 2,
-//    BR width / 2, height / 2
-        
-    //std::cout << "y: " << y << " x: "<< x << " width: "<< width << " height: " <<height << std::endl;
-
-    glVertexPointer(2, GL_FLOAT, 0, points);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
+    glBindTexture(GL_TEXTURE_2D, paddleTextureID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     
-    glDisableClientState(GL_VERTEX_ARRAY);
-    
+    glDisableVertexAttribArray(program.positionAttribute);
+    glDisableVertexAttribArray(program.texCoordAttribute);
 }
+
 
 void Paddle::Up(){
     yVelocity = 1.5f;

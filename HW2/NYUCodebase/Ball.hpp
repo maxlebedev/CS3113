@@ -13,6 +13,10 @@
 
 #include <SDL_opengl.h>
 #include <SDL_image.h>
+#include "ShaderProgram.h"
+
+#include <iostream>
+using namespace std;
 
 #include <array>
 //#include <math.h>
@@ -29,7 +33,8 @@ public:
     
     
     void Update(float elapsed);
-    void Draw();
+//    void Draw(ShaderProgram program,GLuint ballTextureID, Matrix modelMatrix);
+    void Draw(ShaderProgram program,GLuint ballTextureID);
     
     void hitRightPaddle(int paddleY, int paddleheight);
     void hitLeftPaddle(int paddleY, int paddleheight);
@@ -49,9 +54,6 @@ private:
     
     float xVelocity;
     float yVelocity;
-    
-    float xAcceleration;
-    float yAcceleration;
 };
 
 

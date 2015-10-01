@@ -8,57 +8,55 @@
 
 #include "Ball.hpp"
 
-#include <iostream>
-using namespace std;
 
-
-Ball::Ball(float x, float y, float height, float width)	:x(x), y(y),width(width), height(height), xVelocity(0.0f), yVelocity(0.0f),
-xAcceleration(1.0f), yAcceleration(1.0f){
-    
+Ball::Ball(float x, float y, float height, float width)	:x(x), y(y),width(width), height(height), xVelocity(0.0f), yVelocity(0.0f) {
 }
-
 
 void Ball::Update(float timeElapsed){
     //distance = velocity * time
     x += xVelocity * timeElapsed;
     y += yVelocity * timeElapsed;
     
-    //velocity = acclaration * time
-    xVelocity += xAcceleration * timeElapsed;
-    yVelocity += yAcceleration * timeElapsed;
     
 }
-
-void Ball::Draw(){
+//TODO: modelmatrix?
+void Ball::Draw(ShaderProgram program,GLuint ballTextureID){
+    float ballSize = 0.045f;
+    float vertices[] = {-1*ballSize, -1*ballSize, 1*ballSize, 1*ballSize, -1*ballSize, 1*ballSize, 1*ballSize, 1*ballSize, -1*ballSize, -1*ballSize, 1*ballSize, -1*ballSize};
+    vertices[0] += x;
+        vertices[1] += y;
+    vertices[2] += x;
+        vertices[3] += y;
+    vertices[4] += x;
+        vertices[5] += y;
+    vertices[6] += x;
+        vertices[7] += y;
+    vertices[8] += x;
+        vertices[9] += y;
+    vertices[10] += x;
+        vertices[11] += y;
     
-    glMatrixMode(GL_MODELVIEW);
+    glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+    glEnableVertexAttribArray(program.positionAttribute);
     
-    glLoadIdentity();
-    glTranslatef(x, y, 0);
-    glScalef(1.0, 1.0, 1.0);
+    float texCoords[] = {0.0, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+    glVertexAttribPointer(program.texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+    glEnableVertexAttribArray(program.texCoordAttribute);
     
-    GLfloat points[] = {-width / 4, -height/4, width / 4, -height/4, width / 4, height/4, -width / 4, -height/4, width / 4, height/4, -width / 4, height/4};
-    
-    glVertexPointer(2, GL_FLOAT, 0, points);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    
+    glBindTexture(GL_TEXTURE_2D, ballTextureID);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     
-    glDisableClientState(GL_VERTEX_ARRAY);
-    
+    glDisableVertexAttribArray(program.positionAttribute);
+    glDisableVertexAttribArray(program.texCoordAttribute);
 }
 
-//Play around
+
 void Ball::hitTop(){
     yVelocity = -std::abs(yVelocity);
-    xAcceleration = 0.0f;
-    yAcceleration = 0.0f;
 }
 
 void Ball::hitBottom(){
     yVelocity = std::abs(yVelocity);
-    xAcceleration = 0.0f;
-    yAcceleration = 0.0f;
 }
 
 void Ball::hitRightPaddle(int paddleY,int paddleheight){
@@ -66,13 +64,9 @@ void Ball::hitRightPaddle(int paddleY,int paddleheight){
     float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
     float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
     std::cout << "bounceAngle: " << bounceAngle << std::endl;
-    //TODO use bounceangle
-    //xVelocity = xVelocity* cos(bounceAngle);
-    //yVelocity = xVelocity*sin(bounceAngle)*-1;
-    //xVelocity = cos(bounceAngle);
-    //yVelocity = -1 * sin(bounceAngle);
+    //TODO use bounceangle look up slides
     xVelocity = -1.0f * (((float)rand()) / (float)RAND_MAX);
-    //yVelocity = 1.5f;
+    yVelocity = 1.5f;
 
 }
 
@@ -80,8 +74,7 @@ void Ball::hitLeftPaddle(int paddleY,int paddleheight){
     float relativeIntersectY = (paddleY+(paddleheight/2)) - y;
     float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
     float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
-    //xVelocity = xVelocity* cos(bounceAngle);
-    //yVelocity = xVelocity*sin(bounceAngle)*-1;
+    std::cout << "bounceAngle: " << bounceAngle << std::endl;
     xVelocity = 1.0f * (((float)rand()) / (float)RAND_MAX);
     yVelocity = 1.5f;
     
@@ -89,10 +82,8 @@ void Ball::hitLeftPaddle(int paddleY,int paddleheight){
 
 void Ball::launch(){
     float r = (((float)rand()) / (float)RAND_MAX)-0.5f;
-    xVelocity = 1.5f*r;
+    xVelocity = 1.5f;//*r
     yVelocity = 1.5f;
-    xAcceleration = 0;
-    yAcceleration = 0;
 }
 
 void Ball::reset(){
@@ -100,6 +91,4 @@ void Ball::reset(){
     y = 0.0f;
     xVelocity = 0.0f;
     yVelocity = 0.0f;
-    xAcceleration = 0.0f;
-    yAcceleration = 0.0f;
 }

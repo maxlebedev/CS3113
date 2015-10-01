@@ -9,14 +9,16 @@
 #ifndef Paddle_hpp
 #define Paddle_hpp
 
-
+#define PADDLEHEIGHT 1.0f
 
 #include <SDL_opengl.h>
 #include <SDL_image.h>
 
+#include "Matrix.h"
+#include "ShaderProgram.h"
+
 #include <array>
 
-#define PADDLEHEIGHT 0.30f
 
 using std::array;
 
@@ -25,7 +27,8 @@ public:
     Paddle(float x, float y, float width, float height);
     
     void Update(float elapsed);
-    void Draw();
+//    void Draw(ShaderProgram program, Matrix modelMatrix);
+    void Draw(ShaderProgram program,GLuint paddleTextureID);
     
     void Up();
     void Down();
