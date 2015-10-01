@@ -45,6 +45,7 @@ GLuint paddleTextureID;
 bool collided(const std::array<float, 4> &rect1, const std::array<float, 4> &rect2){
     if(rect2[0] > (rect1[0]+rect1[2]) || rect2[1] > (rect1[1]+rect1[3]) || (rect2[0]+rect2[2]) < rect1[0] || (rect2[0]+rect2[3]) < rect1[1])
         return false;
+    cout << "hitOLD: " << rect2[0] <<"|" << rect2[1]<<"|" << rect2[2]<<"|" << rect2[3] <<endl;
     return true;
 }
 
@@ -121,9 +122,9 @@ ShaderProgram Setup(){//Ball* ball, Paddle* paddle,Paddle* paddle2
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //black
     
     //Setup my entities here!
-    ball = new Ball(0.0f, 0.0f, 0.1f, 0.1f);
-    paddle1 = new Paddle(-1.0f, 0.0f, 0.1f, 0.30f);
-    paddle2 = new Paddle(1.0f, 0.0f, 0.1f, 0.30f);
+    ball = new Ball(-0.15f, -0.15f, 0.15f, 0.15f);
+    paddle1 = new Paddle(-1.0f, 0.0f, 0.15f, 0.30f);
+    paddle2 = new Paddle(1.0f, 0.0f, 0.15f, 0.30f);
 
     
     program.setModelMatrix(modelMatrix);

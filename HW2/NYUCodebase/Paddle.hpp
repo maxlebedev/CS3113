@@ -27,7 +27,6 @@ public:
     Paddle(float x, float y, float width, float height);
     
     void Update(float elapsed);
-//    void Draw(ShaderProgram program, Matrix modelMatrix);
     void Draw(ShaderProgram program,GLuint paddleTextureID);
     
     void Up();
@@ -40,6 +39,7 @@ public:
     
     float width;
     float height;
+    GLuint paddleTextureID;
 
     
 private:

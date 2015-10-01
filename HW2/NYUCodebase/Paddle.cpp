@@ -11,7 +11,12 @@
 using namespace std;
 
 Paddle::Paddle(float x, float y, float width, float height):
-x(x), y(y), width(width), height(height), xVelocity(0.0f), yVelocity(0.0f), xAcceleration(0.0f), yAcceleration(0.0f){}
+x(x), y(y), width(width), height(height)   {
+    xVelocity = 0.0f;
+    yVelocity = 0.0f;
+    xAcceleration =0.0f;
+    yAcceleration =0.0f;
+}
 
 void Paddle::Update(float timeElapsed){
     y += yVelocity * timeElapsed;
@@ -19,9 +24,9 @@ void Paddle::Update(float timeElapsed){
 }
 
 void Paddle::Draw(ShaderProgram program,GLuint paddleTextureID){
-    float paddleSizeX = 0.050f;
-    float paddleSizeY = 0.10f;
-    float vertices[] = {-1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, 1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, -1*paddleSizeY};
+    float paddleSizeX = width;
+    float paddleSizeY = height;
+    /*float vertices[] = {-1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, 1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, -1*paddleSizeY};
     vertices[0] += x;
     vertices[1] += y;
     vertices[2] += x;
@@ -33,7 +38,9 @@ void Paddle::Draw(ShaderProgram program,GLuint paddleTextureID){
     vertices[8] += x;
     vertices[9] += y;
     vertices[10] += x;
-    vertices[11] += y;
+    vertices[11] += y;*/
+    
+    float vertices[] = {x, y, x+paddleSizeX, y+paddleSizeY, x, y+paddleSizeY, x+paddleSizeX, y+paddleSizeY, x, y, x+paddleSizeX, y};
     
     glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
     glEnableVertexAttribArray(program.positionAttribute);

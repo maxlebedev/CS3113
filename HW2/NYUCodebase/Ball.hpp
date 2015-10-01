@@ -22,6 +22,12 @@ using namespace std;
 //#include <math.h>
 #include <cmath>
 
+#ifdef _WINDOWS
+#define RESOURCE_FOLDER ""
+#else
+#define RESOURCE_FOLDER "NYUCodebase.app/Contents/Resources/"
+#endif
+
 # define PI           3.14159265358979323846  /* pi */
 #define MAXBOUNCEANGLE 5*PI/12
 
@@ -42,13 +48,14 @@ public:
     void hitBottom();
     void reset();
     void launch();
+    bool collidesWith(const std::array<float, 4> &rect);
 
     float x;
     float y;
     
     float width;
     float height;
-
+    GLuint ballTextureID;
     
 private:
     
