@@ -19,7 +19,6 @@
 
 #include <array>
 
-
 using std::array;
 
 class Paddle{
@@ -40,7 +39,6 @@ public:
     float width;
     float height;
     GLuint paddleTextureID;
-
     
     float top();
     float bottom();

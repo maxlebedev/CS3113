@@ -18,25 +18,19 @@
 #define RESOURCE_FOLDER "NYUCodebase.app/Contents/Resources/"
 #endif
 
+#include <stdint.h>
+#include <inttypes.h>
+
+#define LEFTBORDER -1.7777f
+#define BOTTOMBORDER -1.0f
+#define RIGHTBORDER 1.7777f
+#define TOPBORDER 1.0f
+
 SDL_Window* displayWindow;
-
-#define ORTHOTOP 1.0f
-#define ORTHOBOT -1.0f
-#define ORTHOLEFT -1.33f
-#define ORTHORIGHT 1.33f
-
-using std::array;
 Ball* ball;
 Paddle* paddle1;
 Paddle* paddle2;
-
-Matrix projectionMatrix;
-Matrix modelMatrix;
-Matrix viewMatrix;
-
-
 float lastFrameTicks;
-
 bool newGame;
 GLuint ballTextureID;
 GLuint paddleTextureID;
@@ -44,65 +38,46 @@ GLuint paddleTextureID;
 //LBRT order
 bool collided(Ball ball, Paddle paddle){
     if(paddle.top() < ball.bottom() || paddle.bottom() > ball.top() || paddle.left() > ball.right() || paddle.right() < ball.left()){
-        cout << "miss: " << ball.right() << "|" << paddle.left()<<"::" << ball.top() << "|" << paddle.bottom() << endl;
         return false;
     }
-
-    cout << "hitOLD: " << endl;
     return true;
-    
-    
-    /*if(rect2[0] > (rect1[0]+rect1[2]) || rect2[1] > (rect1[1]+rect1[3]) || (rect2[0]+rect2[2]) < rect1[0] || (rect2[0]+rect2[3]) < rect1[1])
-        return false;
-    cout << "hitOLD: " << rect2[0] <<"|" << rect2[1]<<"|" << rect2[2]<<"|" << rect2[3] <<endl;
-    return true;*/
 }
 
 void HandleCollisions(){
-    const array<float, 4> boxBall = {ball->x, ball->y, ball->width, ball->height};
-    const array<float, 4> boxPaddle1 = {paddle1->x, paddle1->y, paddle1->width, paddle1->height};
-    const array<float, 4> boxPaddle2 = {paddle2->x, paddle2->y, paddle2->width, paddle2->height};
-    
-    //Top
-    if (ball->top() >= ORTHOTOP)
+    if (ball->top() >= TOPBORDER)
         ball->hitTop();
-    if (paddle1->top() > ORTHOTOP)
+    if (paddle1->top() > TOPBORDER)
         paddle1->Stop();
-    if (paddle2->top() > ORTHOTOP)
+    if (paddle2->top() > TOPBORDER)
         paddle2->Stop();
     
-    //Bottom
-    if (ball->bottom() <= ORTHOBOT)
+    if (ball->bottom() <= BOTTOMBORDER)
         ball->hitBottom();
-    if (paddle1->bottom() < ORTHOBOT)
+    if (paddle1->bottom() < BOTTOMBORDER)
         paddle1->Stop();
-    if (paddle2->bottom() < ORTHOBOT)
+    if (paddle2->bottom() < BOTTOMBORDER)
         paddle2->Stop();
     
-    //Right
-    if (ball->right() >= ORTHORIGHT){
+    if (ball->right() >= RIGHTBORDER){
+        ball->reset();
+        newGame = true;
+    }
+    if (ball->left() <= LEFTBORDER){
         ball->reset();
         newGame = true;
     }
     
-    //Left
-    if (ball->left() <= ORTHOLEFT){
-        ball->reset();
-        newGame = true;
-    }
-    //Paddle 1
     if (collided(*ball,*paddle1))
-        ball->hitLeftPaddle(boxPaddle1[3], PADDLEHEIGHT);
-    //Paddle 2
+        ball->hitLeftPaddle();
     if (collided(*ball,*paddle2))
-        ball->hitRightPaddle(boxPaddle2[3],PADDLEHEIGHT);
+        ball->hitRightPaddle();
 }
 
 GLuint LoadTexture(const char *image_path) {
     SDL_Surface *surface = IMG_Load(image_path);
     GLuint textureID;
     glGenTextures(0, &textureID);
-    //    glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_BGRA,
                  GL_UNSIGNED_BYTE, surface->pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -122,18 +97,22 @@ ShaderProgram Setup(){//Ball* ball, Paddle* paddle,Paddle* paddle2
 
     ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
     
-    //set up the matrix stuff
+    Matrix projectionMatrix;
+    Matrix modelMatrix;
+    Matrix viewMatrix;
+    
     projectionMatrix.setOrthoProjection(-1.7777f, 1.77777f, -1.0f, 1.0f, -1.0f, 1.0f);
     
     glViewport(0, 0, 800, 600);
     
-    //background
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //black
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     
-    //Setup my entities here!
+    ballTextureID = LoadTexture(RESOURCE_FOLDER"ballBlue.png");
     ball = new Ball(-0.15f, -0.15f, 0.15f, 0.15f);
-    paddle1 = new Paddle(-1.0f, 0.0f, 0.15f, 0.30f);
-    paddle2 = new Paddle(1.0f, 0.0f, 0.15f, 0.30f);
+    paddleTextureID = LoadTexture(RESOURCE_FOLDER"brickWall.png");
+    
+    paddle1 = new Paddle(-1.5f, 0.0f, 0.15f, 0.30f);
+    paddle2 = new Paddle(1.5f, 0.0f, 0.15f, 0.30f);
 
     
     program.setModelMatrix(modelMatrix);
@@ -143,9 +122,7 @@ ShaderProgram Setup(){//Ball* ball, Paddle* paddle,Paddle* paddle2
     glUseProgram(program.programID);
     
     lastFrameTicks = 0.0f;
-    
     newGame = true;
-
     return program;
 }
 
@@ -153,33 +130,25 @@ void ProcessEvents(bool& done){
     SDL_Event event;
     
     while (SDL_PollEvent(&event)) {
-        //Exit
         if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE) {
             done = true;
         }
         
-        //Keyboard 2 players ONLY
         else if (event.type == SDL_KEYDOWN){
-            //Player 1
             if (event.key.keysym.scancode == SDL_SCANCODE_W)
                 paddle1->Up();
             else if (event.key.keysym.scancode == SDL_SCANCODE_S)
                 paddle1->Down();
-            //Player 2
             if (event.key.keysym.scancode == SDL_SCANCODE_UP)
                 paddle2->Up();
             else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
                 paddle2->Down();
         }
-        
         else if (event.type == SDL_KEYUP){
-            //Player 1
             if (event.key.keysym.scancode == SDL_SCANCODE_W)
                 paddle1->Stop();
             else if (event.key.keysym.scancode == SDL_SCANCODE_S)
                 paddle1->Stop();
-            
-            //Player 2
             if (event.key.keysym.scancode == SDL_SCANCODE_UP)
                 paddle2->Stop();
             else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN)
@@ -188,8 +157,22 @@ void ProcessEvents(bool& done){
     }
 }
 
+/*
+void input(const Uint8 *keys){
+    const Uint8 *keys = SDL_GetKeyboardState(NULL);
+    if(keys[SDL_SCANCODE_W])
+        paddle1->Up();
+    else if(keys[SDL_SCANCODE_S])
+        paddle1->Down();
+    
+    if(keys[SDL_SCANCODE_UP])
+        paddle2->Up();
+    else if(keys[SDL_SCANCODE_DOWN])
+        paddle1->Down();
+}*/
+
+
 void Update(){
-    //Physics
     float ticks = (float)SDL_GetTicks() / 1000.0f;
     float elapsed = ticks - lastFrameTicks;
     lastFrameTicks = ticks;
@@ -202,15 +185,12 @@ void Update(){
         ball->launch();
         newGame = false;
     }
-    //Collisions
     HandleCollisions();
 }
 
 void Render(ShaderProgram program){
-    //Clears the screen to the set color
     glClear(GL_COLOR_BUFFER_BIT);
     
-    //Setup Transforms Draw 
     ball->Draw(program, ballTextureID);
     paddle1->Draw(program, paddleTextureID);
     paddle2->Draw(program, paddleTextureID);
@@ -219,11 +199,8 @@ void Render(ShaderProgram program){
 
 int main(int argc, char *argv[]){
     ShaderProgram program = Setup();
-    ballTextureID = LoadTexture(RESOURCE_FOLDER"ballBlue.png");
-    paddleTextureID = LoadTexture(RESOURCE_FOLDER"brickWall.png");
     bool done = false;
     while (!done) {
-        
         ProcessEvents(done);
         Update();
         Render(program);

@@ -29,7 +29,6 @@ using namespace std;
 #endif
 
 # define PI           3.14159265358979323846  /* pi */
-#define MAXBOUNCEANGLE 5*PI/12
 
 using std::array;
 
@@ -37,18 +36,15 @@ class Ball{
 public:
     Ball(float x, float y, float height, float width);
     
-    
     void Update(float elapsed);
-//    void Draw(ShaderProgram program,GLuint ballTextureID, Matrix modelMatrix);
     void Draw(ShaderProgram program,GLuint ballTextureID);
     
-    void hitRightPaddle(int paddleY, int paddleheight);
-    void hitLeftPaddle(int paddleY, int paddleheight);
+    void hitRightPaddle();
+    void hitLeftPaddle();
     void hitTop();
     void hitBottom();
     void reset();
     void launch();
-    bool collidesWith(const std::array<float, 4> &rect);
 
     float x;
     float y;
@@ -65,6 +61,8 @@ public:
     
 private:
     
+    //float speed;
+    //float angle;
     float xVelocity;
     float yVelocity;
 };

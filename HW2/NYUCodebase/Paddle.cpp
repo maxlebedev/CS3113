@@ -26,20 +26,6 @@ void Paddle::Update(float timeElapsed){
 void Paddle::Draw(ShaderProgram program,GLuint paddleTextureID){
     float paddleSizeX = width;
     float paddleSizeY = height;
-    /*float vertices[] = {-1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, 1*paddleSizeY, 1*paddleSizeX, 1*paddleSizeY, -1*paddleSizeX, -1*paddleSizeY, 1*paddleSizeX, -1*paddleSizeY};
-    vertices[0] += x;
-    vertices[1] += y;
-    vertices[2] += x;
-    vertices[3] += y;
-    vertices[4] += x;
-    vertices[5] += y;
-    vertices[6] += x;
-    vertices[7] += y;
-    vertices[8] += x;
-    vertices[9] += y;
-    vertices[10] += x;
-    vertices[11] += y;*/
-    
     float vertices[] = {x, y, x+paddleSizeX, y+paddleSizeY, x, y+paddleSizeY, x+paddleSizeX, y+paddleSizeY, x, y, x+paddleSizeX, y};
     
     glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, vertices);
@@ -92,13 +78,9 @@ void Paddle::Stop(){
         if (y > 1.0f - height){
             y = 1.0f - height;
         }
-        else if (y < -1.0f + height){
-            y = -1.0f + height;
+        else if (y < -1.0f){
+            y = -1.0f;
         }
         yVelocity = 0.0f;
     }
-}
-
-float Paddle::getSpin() const{
-    return yAcceleration;
 }

@@ -13,27 +13,16 @@ Ball::Ball(float x, float y, float width, float height)	:x(x), y(y),width(width)
 }
 
 void Ball::Update(float timeElapsed){
-    //distance = velocity * time
     x += xVelocity * timeElapsed;
     y += yVelocity * timeElapsed;
+    
+    //x += cos(angle)*timeElapsed * speed;
+    //y += sin(angle)*timeElapsed * speed;
     
 }
 //TODO: modelmatrix?
 void Ball::Draw(ShaderProgram program,GLuint ballTextureID){
-    float ballSize = width;//0.045f;
-    /*float vertices[] = {-1*ballSize, -1*ballSize, 1*ballSize, 1*ballSize, -1*ballSize, 1*ballSize, 1*ballSize, 1*ballSize, -1*ballSize, -1*ballSize, 1*ballSize, -1*ballSize};
-    vertices[0] += x;
-        vertices[1] += y;
-    vertices[2] += x;
-        vertices[3] += y;
-    vertices[4] += x;
-        vertices[5] += y;
-    vertices[6] += x;
-        vertices[7] += y;
-    vertices[8] += x;
-        vertices[9] += y;
-    vertices[10] += x;
-        vertices[11] += y;*/
+    float ballSize = width;
     
     //x,y,x+w,y+h as corners
     float vertices[] = {x, y, x+ballSize, y+ballSize, x, y+ballSize, x+ballSize, y+ballSize, x, y, x+ballSize, y};
@@ -69,45 +58,51 @@ float Ball::right(){
 
 
 void Ball::hitTop(){
+    //if(angle < (PI/2))
+    //    angle -= (PI/2);
+    //else
+    //    angle += (PI/2);
     yVelocity = -std::abs(yVelocity);
+    
 }
 
 void Ball::hitBottom(){
     yVelocity = std::abs(yVelocity);
+    //if(angle < (-PI/2))
+    //    angle += (-PI/2);
+    //else
+    //    angle -= (-PI/2);
 }
 
-void Ball::hitRightPaddle(int paddleY,int paddleheight){
-    float relativeIntersectY = (paddleY+(paddleheight/2)) - y;
-    std::cout << "relativeIntersectY: " << relativeIntersectY << std::endl;
-    float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
-    float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
-    std::cout << "bounceAngle: " << bounceAngle << std::endl;
+void Ball::hitRightPaddle(){
+    //float relativeIntersectY = (paddleY+(paddleheight/2)) - y;
+    //std::cout << "relativeIntersectY: " << relativeIntersectY << std::endl;
+    //float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
+    //float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
+    //std::cout << "bounceAngle: " << bounceAngle << std::endl;
     //TODO use bounceangle look up slides
     xVelocity = -1.0f * (((float)rand()) / (float)RAND_MAX);
     yVelocity = 1.5f;
+    //if(angle < PI )
+    //    angle += (PI/2);
+    //else
+    //    angle -= (PI/2);
+    //speed += 0.01f;
 
 }
 
-void Ball::hitLeftPaddle(int paddleY,int paddleheight){
-    float relativeIntersectY = (paddleY+(paddleheight/2)) - y;
-    float normalizedRelativeIntersectionY = (relativeIntersectY/(paddleheight/2));
-    float bounceAngle = normalizedRelativeIntersectionY * MAXBOUNCEANGLE;
-    std::cout << "bounceAngle: " << bounceAngle << std::endl;
+void Ball::hitLeftPaddle(){
+    //if(angle > 0 )
+    //    angle -= (PI/2);
+    //else
+   //     angle += (PI/2);
+    //speed += 0.01f;
+    
     xVelocity = 1.0f * (((float)rand()) / (float)RAND_MAX);
     yVelocity = 1.5f;
     
 }
 
-//LBRT order
-bool Ball::collidesWith(const std::array<float, 4> &rect){
-    if(x > (x+width) || rect[1] > (y+height) || (rect[0]+rect[2]) < x || (rect[0]+rect[3]) < y){
-        return false;
-    }
-    cout << "hit: " << rect[0] << rect[1] << rect[2] << rect[3] <<endl;
-    return true;
-}
-
-//TODO fix this
 void Ball::launch(){
     float s1 = (((float)rand()) / (float)RAND_MAX);
     float s2 = (((float)rand()) / (float)RAND_MAX);
@@ -122,7 +117,10 @@ void Ball::launch(){
         ysign = 1;
     xVelocity = 2.50f*xsign*(((float)rand()) / (float)RAND_MAX);//*r
     yVelocity = 1.5f *ysign*(((float)rand()) / (float)RAND_MAX);
-    cout << "xVelocity: " << xVelocity <<endl;
+    
+    //angle = (float)rand() / (float)(PI*2);
+    //speed = 1;
+    
 }
 
 void Ball::reset(){
