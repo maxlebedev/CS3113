@@ -55,6 +55,12 @@ public:
     
     float width;
     float height;
+    
+    float top();
+    float bottom();
+    float left();
+    float right();
+    
     GLuint ballTextureID;
     
 private:

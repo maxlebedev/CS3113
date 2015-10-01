@@ -42,6 +42,12 @@ public:
     GLuint paddleTextureID;
 
     
+    float top();
+    float bottom();
+    float left();
+    float right();
+    
+    
 private:
     
     float xVelocity;

@@ -52,6 +52,21 @@ void Ball::Draw(ShaderProgram program,GLuint ballTextureID){
     glDisableVertexAttribArray(program.texCoordAttribute);
 }
 
+float Ball::top(){
+    return y+height;
+}
+
+float Ball::bottom(){
+    return y;
+}
+
+float Ball::left(){
+    return x;
+}
+float Ball::right(){
+    return x+width;
+}
+
 
 void Ball::hitTop(){
     yVelocity = -std::abs(yVelocity);

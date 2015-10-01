@@ -56,6 +56,21 @@ void Paddle::Draw(ShaderProgram program,GLuint paddleTextureID){
     glDisableVertexAttribArray(program.texCoordAttribute);
 }
 
+float Paddle::top(){
+    return y+height;
+}
+
+float Paddle::bottom(){
+    return y;
+}
+
+float Paddle::left(){
+    return x;
+}
+float Paddle::right(){
+    return x+width;
+}
+
 
 void Paddle::Up(){
     yVelocity = 1.5f;
@@ -74,11 +89,11 @@ void Paddle::Down(){
 void Paddle::Stop(){
     yAcceleration = 0.0f;
     if (yVelocity != 0.0f){
-        if (y > 1.0f - height / 2){
-            y = 1.0f - height / 2;
+        if (y > 1.0f - height){
+            y = 1.0f - height;
         }
-        else if (y < -1.0f + height / 2){
-            y = -1.0f + height / 2;
+        else if (y < -1.0f + height){
+            y = -1.0f + height;
         }
         yVelocity = 0.0f;
     }

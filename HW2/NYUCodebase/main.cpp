@@ -42,11 +42,20 @@ GLuint ballTextureID;
 GLuint paddleTextureID;
 
 //LBRT order
-bool collided(const std::array<float, 4> &rect1, const std::array<float, 4> &rect2){
-    if(rect2[0] > (rect1[0]+rect1[2]) || rect2[1] > (rect1[1]+rect1[3]) || (rect2[0]+rect2[2]) < rect1[0] || (rect2[0]+rect2[3]) < rect1[1])
+bool collided(Ball ball, Paddle paddle){
+    if(paddle.top() < ball.bottom() || paddle.bottom() > ball.top() || paddle.left() > ball.right() || paddle.right() < ball.left()){
+        cout << "miss: " << ball.right() << "|" << paddle.left()<<"::" << ball.top() << "|" << paddle.bottom() << endl;
+        return false;
+    }
+
+    cout << "hitOLD: " << endl;
+    return true;
+    
+    
+    /*if(rect2[0] > (rect1[0]+rect1[2]) || rect2[1] > (rect1[1]+rect1[3]) || (rect2[0]+rect2[2]) < rect1[0] || (rect2[0]+rect2[3]) < rect1[1])
         return false;
     cout << "hitOLD: " << rect2[0] <<"|" << rect2[1]<<"|" << rect2[2]<<"|" << rect2[3] <<endl;
-    return true;
+    return true;*/
 }
 
 void HandleCollisions(){
@@ -55,37 +64,37 @@ void HandleCollisions(){
     const array<float, 4> boxPaddle2 = {paddle2->x, paddle2->y, paddle2->width, paddle2->height};
     
     //Top
-    if (boxBall[1] + boxBall[3] / 2 >= ORTHOTOP)
+    if (ball->top() >= ORTHOTOP)
         ball->hitTop();
-    if (boxPaddle1[1] + boxPaddle1[3] / 2 > ORTHOTOP)
+    if (paddle1->top() > ORTHOTOP)
         paddle1->Stop();
-    if (boxPaddle2[1] + boxPaddle2[3] / 2 > ORTHOTOP)
+    if (paddle2->top() > ORTHOTOP)
         paddle2->Stop();
     
     //Bottom
-    if (boxBall[1] - boxBall[3] / 2 <= ORTHOBOT)
+    if (ball->bottom() <= ORTHOBOT)
         ball->hitBottom();
-    if (boxPaddle1[1] - boxPaddle1[3] / 2 < ORTHOBOT)
+    if (paddle1->bottom() < ORTHOBOT)
         paddle1->Stop();
-    if (boxPaddle2[1] - boxPaddle2[3] / 2 < ORTHOBOT)
+    if (paddle2->bottom() < ORTHOBOT)
         paddle2->Stop();
     
     //Right
-    if (boxBall[0] - boxBall[2] / 2 >= ORTHORIGHT){
+    if (ball->right() >= ORTHORIGHT){
         ball->reset();
         newGame = true;
     }
     
     //Left
-    if (boxBall[0] + boxBall[2] / 2 <= ORTHOLEFT){
+    if (ball->left() <= ORTHOLEFT){
         ball->reset();
         newGame = true;
     }
     //Paddle 1
-    if (collided(boxBall,boxPaddle1))
+    if (collided(*ball,*paddle1))
         ball->hitLeftPaddle(boxPaddle1[3], PADDLEHEIGHT);
     //Paddle 2
-    if (collided(boxBall, boxPaddle2))
+    if (collided(*ball,*paddle2))
         ball->hitRightPaddle(boxPaddle2[3],PADDLEHEIGHT);
 }
 
