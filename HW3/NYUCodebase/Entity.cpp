@@ -14,18 +14,6 @@ x(x), y(y), width(width), height(height) {
     step = 0.0f;
     halfStep = 0;
     isAlive = true;
-    
-    /*bottom = y - height/2.0f;
-    top = y + height/2.0f;
-    left = x - width/2.0f;
-    right = x + width/2.0f;
-     
-     
-    bottom = y;
-    top = y + height;
-    left = x;
-    right = x + width;
-     */
 }
 
 float Entity::bottom(){
@@ -49,6 +37,15 @@ void Entity::Render(ShaderProgram *program){
 
 void Entity::Update(float elapsed){
     if(type == PLAYER){
+        if(x > 1.5777f && velocity_x > 0){
+            velocity_x = 0;
+            x = 1.577;
+        }
+        if(x < -1.7777f && velocity_x < 0){
+            velocity_x = 0;
+            x = -1.777;
+        }
+        
         x += velocity_x * FIXED_TIMESTEP;
         y += velocity_y * FIXED_TIMESTEP;
     }
@@ -74,24 +71,3 @@ void Entity::Draw(ShaderProgram* program){
     float vertices[] = {x, y, x+width, y+height, x, y+height, x+width, y+height, x, y, x+width, y};
     sprite.Draw(program, vertices);
 }
-
-/*
-void Entity::Draw(ShaderProgram* program){
-    float sizeX = width;
-    float sizeY = height;
-    float vertices[] = {x, y, x+sizeX, y+sizeY, x, y+sizeY, x+sizeX, y+sizeY, x, y, x+sizeX, y};
-    
-
-    glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertices);
-    glEnableVertexAttribArray(program->positionAttribute);
-    
-    float texCoords[] = {0.0, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0};
-    glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
-    glEnableVertexAttribArray(program->texCoordAttribute);
-    
-    glBindTexture(GL_TEXTURE_2D, sprite.textureID);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    
-    glDisableVertexAttribArray(program->positionAttribute);
-    glDisableVertexAttribArray(program->texCoordAttribute);
-}*/

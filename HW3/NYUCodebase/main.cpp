@@ -38,7 +38,6 @@ std::vector<Entity> entities;
 //TODO: display text
 //TODO: enemy bullets
 //TODO: bullet limit
-//TODO: no walking off screen?
 
 SDL_Window* displayWindow;
 
@@ -67,7 +66,6 @@ void initEntityArray(){
         }
     }
     //now the player
-    //<SubTexture name="playerShip1_orange.png" x="247" y="84" width="99" height="75"/>
     Entity player = *new Entity(0,-0.8,0.2,0.2) ;
     player.sprite = SheetSprite(spriteSheetTexture, 247.0f/1024.0f, 84.0f/1024.0f, 99.0f/1024.0f, 75.0f/1024.0f, 0.2);
     player.type = PLAYER;
@@ -76,11 +74,9 @@ void initEntityArray(){
 
 void shootBullet() {
     puts("pew pew");
-    GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"sheet.png");
+    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"sheet.png");
     Entity newBullet = *new Entity(entities[40].x+entities[40].width/2.0f,entities[40].y+0.2,0.01,0.1);
-    //<SubTexture name="beam4.png" x="177" y="496" width="41" height="17"/>
-    //<SubTexture name="laserGreen02.png" x="843" y="116" width="13" height="57"/>
-    newBullet.sprite = SheetSprite(spriteSheetTexture, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
+    newBullet.sprite = SheetSprite(sSTex, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
     newBullet.type = BULLET;
     newBullet.velocity_y = 2.0;
     bullets.push_back(newBullet);
@@ -192,20 +188,18 @@ void Update(float elapsed){
     }
     
     for(int i=0; i < bullets.size(); i++) {
-        bullets[i].Update(elapsed);
-        for (int j = 0; j < entities.size(); j++) {
-            if(bullets[i].collidesWith(entities[j])){//implement bullets[i].isAlive() if needed
-                //do collision stuffs
-                puts("POW");
-                entities[j].isAlive = false;
-                bullets[i].isAlive = false;
-                
+        if (bullets[i].isAlive) {
+            bullets[i].Update(elapsed);
+            for (int j = 0; j < entities.size(); j++) {
+                if(entities[j].isAlive && bullets[i].collidesWith(entities[j])){
+                    //do collision stuffs
+                    puts("POW");
+                    entities[j].isAlive = false;
+                    bullets[i].isAlive = false;
+                }
             }
-            
         }
-
     }
-    //Handle Collisions?
 }
 
 void fixedTSUpdate(){
@@ -234,9 +228,10 @@ void Render(ShaderProgram* program) {
             entities[i].Render(program);
         }
         for(int i=0; i < bullets.size(); i++) {
-            bullets[i].Render(program);
+            if( bullets[i].isAlive){
+                bullets[i].Render(program);
+            }
         }
-
     }
     SDL_GL_SwapWindow(displayWindow);
 }
