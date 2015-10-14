@@ -10,5 +10,21 @@
 #define SheetSprite_hpp
 
 #include <stdio.h>
+#include "ShaderProgram.h"
+
+
+class SheetSprite {
+public:
+    SheetSprite();
+    SheetSprite(unsigned int textureID, float u, float v, float width, float height, float size);
+    void Draw(ShaderProgram* program);
+    void Draw(ShaderProgram* program, float vertices[]);
+    float size;
+    unsigned int textureID;
+    float u;
+    float v;
+    float width;
+    float height;
+};
 
 #endif /* SheetSprite_hpp */
