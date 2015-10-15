@@ -33,6 +33,8 @@ std::vector<Entity> bullets;
 //40 is player
 std::vector<Entity> entities;
 
+std::vector<Entity> text;
+
 
 //TODO: 3 states
 //TODO: display text
@@ -72,6 +74,15 @@ void initEntityArray(){
     entities.push_back(player);
 }
 
+
+//this does not yet work
+void initMenuScreen(){
+    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"font2.png");
+    Entity letter = *new Entity(0,0,0.01,0.1);
+    letter.sprite = SheetSprite(sSTex, 0, 0, 1.0f, 1.0f, 0.2);
+    text.push_back(letter);
+}
+
 void shootBullet() {
     puts("pew pew");
     GLuint sSTex = LoadTexture(RESOURCE_FOLDER"sheet.png");
@@ -102,8 +113,10 @@ ShaderProgram Setup(){
     glViewport(0, 0, 800, 600);
     
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    
+
+    initMenuScreen();
     initEntityArray();
+
     
     program.setModelMatrix(modelMatrix);
     program.setProjectionMatrix(projectionMatrix);
@@ -131,7 +144,13 @@ void PlayerInput(bool& done){
                 entities[40].velocity_x = 0.5;
             }
             else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE){
-                shootBullet();
+                if(state == STATE_GAME_LEVEL){
+                        shootBullet();
+                }
+                else if (state == STATE_MAIN_MENU){
+                    state = STATE_GAME_LEVEL;
+                }
+
             }
         }
         else if (event.type == SDL_KEYUP){
@@ -169,33 +188,29 @@ GLboolean leftTurn(){
 }
 
 void Update(float elapsed){
-    //loop through entities and update all
-    int sign = entities[0].step/0.1f;
-    if (rightTurn()) {
-        sign = 1;
-    }
-    if (leftTurn()) {
-        sign = -1;
-    }
-    float newstep;
-    for(int i=0; i < entities.size(); i++) {
-        newstep = sign * fabs(entities[i].step);
-        if (newstep != entities[i].step){
-            entities[i].step = newstep;
-            entities[i].y = entities[i].y-0.1;
+    if (state == STATE_GAME_LEVEL){
+        int sign = entities[0].step/0.1f;
+        if (rightTurn())
+            sign = 1;
+        if (leftTurn())
+            sign = -1;
+        float newstep;
+        for(int i=0; i < entities.size(); i++) {//loop through entities and update all
+            newstep = sign * fabs(entities[i].step);
+            if (newstep != entities[i].step){
+                entities[i].step = newstep;
+                entities[i].y = entities[i].y-0.1;
+            }
+            entities[i].Update(elapsed);
         }
-        entities[i].Update(elapsed);
-    }
-    
-    for(int i=0; i < bullets.size(); i++) {
-        if (bullets[i].isAlive) {
-            bullets[i].Update(elapsed);
-            for (int j = 0; j < entities.size(); j++) {
-                if(entities[j].isAlive && bullets[i].collidesWith(entities[j])){
-                    //do collision stuffs
-                    puts("POW");
-                    entities[j].isAlive = false;
-                    bullets[i].isAlive = false;
+        for(int i=0; i < bullets.size(); i++) {
+            if (bullets[i].isAlive) {
+                bullets[i].Update(elapsed);
+                for (int j = 0; j < entities.size(); j++) {
+                    if(entities[j].isAlive && bullets[i].collidesWith(entities[j])){//do collision stuffs
+                        entities[j].isAlive = false;
+                        bullets[i].isAlive = false;
+                    }
                 }
             }
         }
@@ -209,28 +224,32 @@ void fixedTSUpdate(){
     lastFrameTicks = ticks;
     
     float fixedElapsed = elapsed + timeLeftOver;
-    if(fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS) {
+    if(fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS){
         fixedElapsed = FIXED_TIMESTEP * MAX_TIMESTEPS;
     }
-    while (fixedElapsed >= FIXED_TIMESTEP ) {
+    while (fixedElapsed >= FIXED_TIMESTEP){
         fixedElapsed -= FIXED_TIMESTEP;
         Update(FIXED_TIMESTEP);
     }
     timeLeftOver = fixedElapsed;
 }
 
-
-void Render(ShaderProgram* program) {
+void Render(ShaderProgram* program){
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    if (STATE_GAME_LEVEL) {
-        for(int i=0; i < entities.size(); i++) {
+    if (state == STATE_GAME_LEVEL){
+        for(int i=0; i < entities.size(); i++){
             entities[i].Render(program);
         }
-        for(int i=0; i < bullets.size(); i++) {
-            if( bullets[i].isAlive){
+        for(int i=0; i < bullets.size(); i++){
+            if(bullets[i].isAlive){
                 bullets[i].Render(program);
             }
+        }
+    }
+    else if (state == STATE_MAIN_MENU){
+        puts("Main menu");
+        for(int i=0; i < bullets.size(); i++){
+            text[i].Render(program);
         }
     }
     SDL_GL_SwapWindow(displayWindow);
@@ -239,7 +258,8 @@ void Render(ShaderProgram* program) {
 int main(int argc, char *argv[]){
     ShaderProgram program = Setup();
     bool done = false;
-    state = STATE_GAME_LEVEL;//TODO: switch back
+    state = STATE_MAIN_MENU;//STATE_GAME_LEVEL;//TODO: switch back
+    //initMenuScreen(&program);
     while (!done) {
         PlayerInput(done);
         fixedTSUpdate();
