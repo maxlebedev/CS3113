@@ -84,7 +84,6 @@ void initMenuScreen(){
 }
 
 void shootBullet() {
-    puts("pew pew");
     GLuint sSTex = LoadTexture(RESOURCE_FOLDER"sheet.png");
     Entity newBullet = *new Entity(entities[40].x+entities[40].width/2.0f,entities[40].y+0.2,0.01,0.1);
     newBullet.sprite = SheetSprite(sSTex, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
@@ -149,6 +148,11 @@ void PlayerInput(bool& done){
                 }
                 else if (state == STATE_MAIN_MENU){
                     state = STATE_GAME_LEVEL;
+                }
+                else if (state == STATE_GAME_OVER){
+                    state = STATE_GAME_LEVEL;
+                    entities.clear();
+                    initEntityArray();
                 }
 
             }
@@ -215,6 +219,16 @@ void Update(float elapsed){
             }
         }
     }
+    int alive = 0;
+    for (int i = 0; i < entities.size(); i++) {
+        if (entities[i].isAlive) {
+            alive++;
+        }
+    }
+    if (alive == 1) {
+        state = STATE_GAME_OVER;
+        puts("game over. press space to play again");
+    }
 }
 
 void fixedTSUpdate(){
@@ -247,7 +261,7 @@ void Render(ShaderProgram* program){
         }
     }
     else if (state == STATE_MAIN_MENU){
-        puts("Main menu");
+        puts("Main menu. Press space to start");
         for(int i=0; i < bullets.size(); i++){
             text[i].Render(program);
         }
