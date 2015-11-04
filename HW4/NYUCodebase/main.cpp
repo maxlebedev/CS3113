@@ -60,35 +60,34 @@ void initEntityArray(){
     //<SubTexture name="hill_small.png" x="792" y="828" width="48" height="106"/> 914 × 936
     GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
     
+    Entity player = *new Entity(0,-0.8,0.2,0.2);
+    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
+    player.type = PLAYER;
+    entities.push_back(player);
+    
     for (float i = 0; i < 4; i ++){
         for(float j = 0.0f; j < 10; j++){
             Entity myEntity = *new Entity(-1.35+((3*j)/10.0f),0.8-(i/8.0f),0.1,0.1) ;
             myEntity.sprite = SheetSprite(spriteSheetTexture, 425.0f/1024.0f, 468.0f/1024.0f, 93.0f/1024.0f, 84.0f/1024.0f, 0.2);
             myEntity.type = ALIEN;
-            myEntity.step = 0.1f;
+            myEntity.isStatic = true;
             entities.push_back(myEntity);
         }
     }
-    
-    Entity player = *new Entity(0,-0.8,0.2,0.2);
-    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
-    player.type = PLAYER;
-    entities.push_back(player);
+    //floor
+    for(float i = 0.0f; i < 10; i++){
+        Entity myEntity = *new Entity(i/10.f,-1.0f,0.1,0.1) ;
+        myEntity.sprite = SheetSprite(spriteSheetTexture, 425.0f/1024.0f, 468.0f/1024.0f, 93.0f/1024.0f, 84.0f/1024.0f, 0.2);
+        myEntity.type = ALIEN;
+        myEntity.isStatic = true;
+        entities.push_back(myEntity);
+    }
 
-}
-
-
-//this does not yet work
-void initMenuScreen(){
-    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"font2.png");
-    Entity letter = *new Entity(0,0,0.01,0.1);
-    letter.sprite = SheetSprite(sSTex, 0, 0, 1.0f, 1.0f, 0.2);
-    text.push_back(letter);
 }
 
 void shootBullet() {
-    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"sheet.png");
-    Entity newBullet = *new Entity(entities[40].x+entities[40].width/2.0f,entities[40].y+0.2,0.01,0.1);
+    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");//this is global
+    Entity newBullet = *new Entity(entities[0].x+entities[0].width/2.0f,entities[0].y+0.2,0.01,0.1);
     newBullet.sprite = SheetSprite(sSTex, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
     newBullet.type = BULLET;
     newBullet.velocity_y = 2.0;
@@ -116,7 +115,6 @@ ShaderProgram Setup(){
     
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    initMenuScreen();
     initEntityArray();
 
     
@@ -139,11 +137,11 @@ void PlayerInput(bool& done){
         
         else if (event.type == SDL_KEYDOWN){
             if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                entities[40].velocity_x = -0.5;
+                entities[0].acceleration_x = -0.5;
             }
             
             else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                entities[40].velocity_x = 0.5;
+                entities[0].acceleration_x = 0.5;
             }
             else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE){
                 shootBullet();
@@ -151,11 +149,11 @@ void PlayerInput(bool& done){
         }
         else if (event.type == SDL_KEYUP){
             if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                entities[40].velocity_x = 0;
+                //entities[40].velocity_x = 0;
             }
             
             else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                entities[40].velocity_x = 0;
+                //entities[40].velocity_x = 0;
             }
             
         }

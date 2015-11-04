@@ -22,6 +22,7 @@
 # define ALIEN 0
 # define PLAYER 1
 # define BULLET 2
+# define GRAVITY -9.8f
 
 class Entity{
 public:
@@ -30,6 +31,7 @@ public:
     void Render(ShaderProgram *program);
     void Update(float elapsed);
     bool collidesWith(Entity other);
+    void uncollide(Entity other);
     float x;
     float y;
     float width;
@@ -41,14 +43,14 @@ public:
     float friction;
     float acceleration_x;
     float acceleration_y;
-    float step;
-    int halfStep;
     
     float bottom();
     float top();
     float left();
     float right();
     bool isAlive;
+    bool isStatic;
+    
 };
 
 #endif /* Entity_hpp */
