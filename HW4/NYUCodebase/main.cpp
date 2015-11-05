@@ -33,8 +33,6 @@ std::vector<Entity> bullets;
 //40 is player
 std::vector<Entity> entities;
 
-std::vector<Entity> text;
-
 
 //TODO: 3 states
 //TODO: display text
@@ -42,6 +40,32 @@ std::vector<Entity> text;
 //TODO: bullet limit
 
 SDL_Window* displayWindow;
+
+Matrix projectionMatrix;
+Matrix modelMatrix;
+Matrix viewMatrix;
+
+#define LEVEL_HEIGHT 16
+#define LEVEL_WIDTH 22
+/*unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH] =
+{
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,6,6,6,6,6,0,0,0,0,0,0,0,0,6,6,6,6,6,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};*/
 
 GLuint LoadTexture(const char *image_path) {
     SDL_Surface *surface = IMG_Load(image_path);
@@ -57,13 +81,7 @@ GLuint LoadTexture(const char *image_path) {
 }
 
 void initEntityArray(){
-    //<SubTexture name="hill_small.png" x="792" y="828" width="48" height="106"/> 914 × 936
     GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
-    
-    Entity player = *new Entity(0,-0.8,0.2,0.2);
-    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
-    player.type = PLAYER;
-    entities.push_back(player);
     
     for (float i = 0; i < 4; i ++){
         for(float j = 0.0f; j < 10; j++){
@@ -74,10 +92,19 @@ void initEntityArray(){
             entities.push_back(myEntity);
         }
     }
-    //floor
-    for(float i = 0.0f; i < 10; i++){
-        Entity myEntity = *new Entity(i/10.f,-1.0f,0.1,0.1) ;
-        myEntity.sprite = SheetSprite(spriteSheetTexture, 425.0f/1024.0f, 468.0f/1024.0f, 93.0f/1024.0f, 84.0f/1024.0f, 0.2);
+    
+    Entity player = *new Entity(0,-0.5,0.2,0.2);
+    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
+    player.type = PLAYER;
+    entities.push_back(player);
+
+
+    //floor. The rest should pr priceedurally generated. toto fix overlep
+    //<SubTexture name="castle.png" x="288" y="792" width="70" height="70"/>
+    //<SubTexture name="castleCenter.png" x="504" y="288" width="70" height="70"/>
+    for(float i = 0.0f; i < 20; i++){
+        Entity myEntity = *new Entity(-1.0f+(i/10.0f),-0.8f,0.1,0.1) ;
+        myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
         myEntity.type = ALIEN;
         myEntity.isStatic = true;
         entities.push_back(myEntity);
@@ -87,7 +114,7 @@ void initEntityArray(){
 
 void shootBullet() {
     GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");//this is global
-    Entity newBullet = *new Entity(entities[0].x+entities[0].width/2.0f,entities[0].y+0.2,0.01,0.1);
+    Entity newBullet = *new Entity(entities[40].x+entities[40].width/2.0f,entities[40].y+0.2,0.01,0.1);
     newBullet.sprite = SheetSprite(sSTex, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
     newBullet.type = BULLET;
     newBullet.velocity_y = 2.0;
@@ -104,10 +131,6 @@ ShaderProgram Setup(){
 #endif
     
     ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
-    
-    Matrix projectionMatrix;
-    Matrix modelMatrix;
-    Matrix viewMatrix;
     
     projectionMatrix.setOrthoProjection(-1.7777f, 1.77777f, -1.0f, 1.0f, -1.0f, 1.0f);
     
@@ -137,35 +160,37 @@ void PlayerInput(bool& done){
         
         else if (event.type == SDL_KEYDOWN){
             if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                entities[0].acceleration_x = -0.5;
+                entities[40].acceleration_x = -0.5;
             }
             
             else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                entities[0].acceleration_x = 0.5;
+                entities[40].acceleration_x = 0.5;
             }
             else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE){
                 shootBullet();
             }
-        }
-        else if (event.type == SDL_KEYUP){
-            if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                //entities[40].velocity_x = 0;
+            else if (event.key.keysym.scancode == SDL_SCANCODE_UP){
+                entities[40].velocity_y += 3.0f;
             }
-            
-            else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                //entities[40].velocity_x = 0;
-            }
-            
         }
     }
 }
 
-void Update(float elapsed){
+void Update(float elapsed, ShaderProgram* program){
         for(int i=0; i < entities.size(); i++) {//loop through entities and update all
             entities[i].Update(elapsed);
         }
     
-    //bullet stuff
+        for(int i=0; i < entities.size(); i++) {
+            if (entities[i].isAlive && !entities[i].isStatic) {
+                for(int j=0; j < entities.size(); j++){
+                    if(i!=j && entities[j].isAlive && entities[i].collidesWith(entities[j])){
+                        entities[i].uncollide(entities[j]);
+                    }
+                }
+            }
+        }
+        //bullet stuff
         for(int i=0; i < bullets.size(); i++) {
             if (bullets[i].isAlive) {
                 bullets[i].Update(elapsed);
@@ -177,9 +202,12 @@ void Update(float elapsed){
                 }
             }
         }
+    viewMatrix.identity();
+    viewMatrix.Translate(-(entities[40].x)/1.7, 0, 0);//(entities[40].y)
+    program->setViewMatrix(viewMatrix);
 }
 
-void fixedTSUpdate(){
+void fixedTSUpdate(ShaderProgram* program){
     //take care of ticks here
     float ticks = (float)SDL_GetTicks() / 1000.0f;
     float elapsed = ticks - lastFrameTicks;
@@ -191,7 +219,7 @@ void fixedTSUpdate(){
     }
     while (fixedElapsed >= FIXED_TIMESTEP){
         fixedElapsed -= FIXED_TIMESTEP;
-        Update(FIXED_TIMESTEP);
+        Update(FIXED_TIMESTEP, program);
     }
     timeLeftOver = fixedElapsed;
 }
@@ -211,12 +239,13 @@ void Render(ShaderProgram* program){
 }
 
 int main(int argc, char *argv[]){
+    puts("start");
     ShaderProgram program = Setup();
     bool done = false;
     //initMenuScreen(&program);
     while (!done) {
         PlayerInput(done);
-        fixedTSUpdate();
+        fixedTSUpdate(&program);
         Render(&program);
         glUseProgram(program.programID);
     }

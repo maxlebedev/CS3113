@@ -13,7 +13,7 @@ Entity::Entity(float x, float y, float width, float height):
 x(x), y(y), width(width), height(height) {
     isAlive = true;
     isStatic = false;
-    friction = 0.01f;
+    friction = 1.0f;
 }
 
 float Entity::bottom(){
@@ -49,7 +49,6 @@ void Entity::Update(float elapsed){
         return;
     }
     
-    //The following screws with aliens
     velocity_x = lerp(velocity_x, 0.0f, FIXED_TIMESTEP * friction);
     velocity_y = lerp(velocity_y, 0.0f, FIXED_TIMESTEP * friction);
     velocity_x += acceleration_x * FIXED_TIMESTEP;
@@ -58,17 +57,6 @@ void Entity::Update(float elapsed){
     y += velocity_y * FIXED_TIMESTEP;
 
     velocity_y += GRAVITY * elapsed;
-    
-    if(type == PLAYER){
-        if(x > 1.5777f && velocity_x > 0){
-            velocity_x = 0;
-            x = 1.577;
-        }
-        if(x < -1.7777f && velocity_x < 0){
-            velocity_x = 0;
-            x = -1.777;
-        }
-    }
 }
 
 bool Entity::collidesWith(Entity other){
@@ -78,7 +66,15 @@ bool Entity::collidesWith(Entity other){
 }
 
 void Entity::uncollide(Entity other){
+    //printf("colliding with x:%f\n", other.x);
     //TODO do some actual uncollision here.
+    float ydist = fabs(( y+height/2 )-(other.y+other.height/2));
+    float ypen = fabs(ydist-(height/2)-(other.height/2));
+    y += ypen +0.0001f;
+    
+    printf("ypen: %f\n", ypen);
+    velocity_y = 0;
+    //velocity_x = 0;
 }
 
 void Entity::Draw(ShaderProgram* program){
