@@ -34,10 +34,6 @@ std::vector<Entity> bullets;
 std::vector<Entity> entities;
 
 
-//TODO: proper friction
-//TODO: proper collison
-//TODO: properly generate platforms
-
 SDL_Window* displayWindow;
 
 Matrix projectionMatrix;
@@ -108,28 +104,17 @@ void initEntityArray(){
     for (float i = 0; i < 4; i ++){
         for(float j = 0.0f; j < 10; j++){
             Entity myEntity = *new Entity(-1.35+((3*j)/10.0f),0.8-(i/8.0f),0.1,0.1) ;
-            myEntity.sprite = SheetSprite(spriteSheetTexture, 425.0f/1024.0f, 468.0f/1024.0f, 93.0f/1024.0f, 84.0f/1024.0f, 0.2);
-            myEntity.type = ALIEN;
+            myEntity.sprite = SheetSprite(spriteSheetTexture, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
+            myEntity.type = PLATFORM;
             myEntity.isStatic = true;
             entities.push_back(myEntity);
         }
     }
     
-    Entity player = *new Entity((LEVEL_WIDTH*TILE_SIZE)/2,-0.5,0.24,0.24);
+    Entity player = *new Entity((LEVEL_WIDTH*TILE_SIZE)/2,-0.5,0.23,0.23);
     player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
     player.type = PLAYER;
     entities.push_back(player);
-
-
-    //floor. The rest should pr priceedurally generated. toto fix overlep
-    //<SubTexture name="castleCenter.png" x="504" y="288" width="70" height="70"/>
-    /*for(float i = 0.0f; i < 200; i++){
-        Entity myEntity = *new Entity(-10.0f+(i/10.0f),-0.8f,0.1,0.1) ;
-        myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
-        myEntity.type = ALIEN;
-        myEntity.isStatic = true;
-        entities.push_back(myEntity);
-    }*/
 
     for(int y=LEVEL_HEIGHT; y > 0 ; y--) {
         for(int x=0; x < LEVEL_WIDTH; x++) {
@@ -137,7 +122,7 @@ void initEntityArray(){
                 //(LEVEL_WIDTH*TILE_SIZE)
                 Entity myEntity = *new Entity((x)/(LEVEL_WIDTH*TILE_SIZE),-(y)/(LEVEL_HEIGHT*TILE_SIZE),TILE_SIZE,TILE_SIZE) ;
                 myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
-                myEntity.type = ALIEN;
+                myEntity.type = PLATFORM;
                 myEntity.isStatic = true;
                 entities.push_back(myEntity);
             }

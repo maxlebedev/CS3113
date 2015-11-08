@@ -19,7 +19,7 @@
 #define FIXED_TIMESTEP 0.0166666f
 
 //types
-# define ALIEN 0
+# define PLATFORM 0
 # define PLAYER 1
 # define BULLET 2
 # define GRAVITY -9.8f
