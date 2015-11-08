@@ -34,10 +34,9 @@ std::vector<Entity> bullets;
 std::vector<Entity> entities;
 
 
-//TODO: 3 states
-//TODO: display text
-//TODO: enemy bullets
-//TODO: bullet limit
+//TODO: proper friction
+//TODO: proper collison
+//TODO: properly generate platforms
 
 SDL_Window* displayWindow;
 
@@ -47,25 +46,28 @@ Matrix viewMatrix;
 
 #define LEVEL_HEIGHT 16
 #define LEVEL_WIDTH 22
-/*unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH] =
+#define TILE_SIZE 0.2f
+
+unsigned int levelData[LEVEL_HEIGHT][LEVEL_WIDTH] =
 {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,6,6,6,6,6,0,0,0,0,0,0,0,0,6,6,6,6,6,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,6,6,6,6,6,6,6,6,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
+    {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-};*/
+};
+
 
 GLuint LoadTexture(const char *image_path) {
     SDL_Surface *surface = IMG_Load(image_path);
@@ -78,6 +80,26 @@ GLuint LoadTexture(const char *image_path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     SDL_FreeSurface(surface);
     return textureID;
+}
+
+void procedurallyGenerate(){
+    for(int y = LEVEL_HEIGHT-2; y > 2; y--){
+        for(int x = 2; x < LEVEL_WIDTH-2; x++){
+            //if the tile 2 below you and 1 over is 1, 66% chance to be 1
+            if (levelData[y+2][x+1] || levelData[y+2][x-1]) {
+                if (rand() % 3) {
+                    levelData[y][x] = 1;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < LEVEL_HEIGHT; ++i){
+        for (int j = 0; j < LEVEL_WIDTH; ++j){
+            std::cout << levelData[i][j] << ' ';
+        }
+        std::cout << std::endl;
+    }
+
 }
 
 void initEntityArray(){
@@ -93,23 +115,34 @@ void initEntityArray(){
         }
     }
     
-    Entity player = *new Entity(0,-0.5,0.2,0.2);
+    Entity player = *new Entity((LEVEL_WIDTH*TILE_SIZE)/2,-0.5,0.2,0.2);
     player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
     player.type = PLAYER;
     entities.push_back(player);
 
 
     //floor. The rest should pr priceedurally generated. toto fix overlep
-    //<SubTexture name="castle.png" x="288" y="792" width="70" height="70"/>
     //<SubTexture name="castleCenter.png" x="504" y="288" width="70" height="70"/>
-    for(float i = 0.0f; i < 20; i++){
-        Entity myEntity = *new Entity(-1.0f+(i/10.0f),-0.8f,0.1,0.1) ;
+    /*for(float i = 0.0f; i < 200; i++){
+        Entity myEntity = *new Entity(-10.0f+(i/10.0f),-0.8f,0.1,0.1) ;
         myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
         myEntity.type = ALIEN;
         myEntity.isStatic = true;
         entities.push_back(myEntity);
-    }
+    }*/
 
+    for(int y=LEVEL_HEIGHT; y > 0 ; y--) {
+        for(int x=0; x < LEVEL_WIDTH; x++) {
+            if(levelData[y][x]) {
+                //(LEVEL_WIDTH*TILE_SIZE)
+                Entity myEntity = *new Entity((x)/(LEVEL_WIDTH*TILE_SIZE),-(y)/(LEVEL_HEIGHT*TILE_SIZE),TILE_SIZE,TILE_SIZE) ;
+                myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
+                myEntity.type = ALIEN;
+                myEntity.isStatic = true;
+                entities.push_back(myEntity);
+            }
+        }
+    }
 }
 
 void shootBullet() {
@@ -123,7 +156,7 @@ void shootBullet() {
 
 ShaderProgram Setup(){
     SDL_Init(SDL_INIT_VIDEO);
-    displayWindow = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
+    displayWindow = SDL_CreateWindow("Platforms", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
     SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
     SDL_GL_MakeCurrent(displayWindow, context);
 #ifdef _WINDOWS
@@ -160,11 +193,11 @@ void PlayerInput(bool& done){
         
         else if (event.type == SDL_KEYDOWN){
             if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                entities[40].acceleration_x = -0.5;
+                entities[40].acceleration_x = -1.0;
             }
             
             else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                entities[40].acceleration_x = 0.5;
+                entities[40].acceleration_x = 1.0;
             }
             else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE){
                 shootBullet();
@@ -173,6 +206,17 @@ void PlayerInput(bool& done){
                 entities[40].velocity_y += 3.0f;
             }
         }
+        else if (event.type == SDL_KEYUP){
+            if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
+                entities[40].acceleration_x = 0;
+            }
+            
+            else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
+                entities[40].acceleration_x = 0;
+            }
+            
+        }
+
     }
 }
 
@@ -203,7 +247,7 @@ void Update(float elapsed, ShaderProgram* program){
             }
         }
     viewMatrix.identity();
-    viewMatrix.Translate(-(entities[40].x)/1.7, 0, 0);//(entities[40].y)
+    viewMatrix.Translate(-(entities[40].x), -(entities[40].y), 0);//(entities[40].y)
     program->setViewMatrix(viewMatrix);
 }
 
@@ -240,9 +284,16 @@ void Render(ShaderProgram* program){
 
 int main(int argc, char *argv[]){
     puts("start");
+    procedurallyGenerate();
     ShaderProgram program = Setup();
     bool done = false;
-    //initMenuScreen(&program);
+    /*union Leveldata {
+        int  arr2[LEVEL_WIDTH][LEVEL_HEIGHT];
+        int  arr1[LEVEL_WIDTH*LEVEL_HEIGHT];
+        int** arrpp;
+    } leveldata;*/
+
+    puts("gen'd");
     while (!done) {
         PlayerInput(done);
         fixedTSUpdate(&program);

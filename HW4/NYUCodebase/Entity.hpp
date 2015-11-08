@@ -48,6 +48,8 @@ public:
     float top();
     float left();
     float right();
+    float xmid();
+    float ymid();
     bool isAlive;
     bool isStatic;
     

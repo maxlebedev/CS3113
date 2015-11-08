@@ -28,6 +28,13 @@ float Entity::left(){
 float Entity::right(){
     return x + width;
 }
+float Entity::xmid(){
+    return x + width/2;
+}
+float Entity::ymid(){
+    return y + height/2;
+}
+
 
 void Entity::Render(ShaderProgram *program){
     if (isAlive) {
@@ -48,7 +55,7 @@ void Entity::Update(float elapsed){
         y += velocity_y * FIXED_TIMESTEP;
         return;
     }
-    
+    //TODO we are lerping poorly here.
     velocity_x = lerp(velocity_x, 0.0f, FIXED_TIMESTEP * friction);
     velocity_y = lerp(velocity_y, 0.0f, FIXED_TIMESTEP * friction);
     velocity_x += acceleration_x * FIXED_TIMESTEP;
@@ -57,6 +64,8 @@ void Entity::Update(float elapsed){
     y += velocity_y * FIXED_TIMESTEP;
 
     velocity_y += GRAVITY * elapsed;
+    if (fabs(velocity_x) < 0.001f)
+        velocity_x = 0;
 }
 
 bool Entity::collidesWith(Entity other){
@@ -66,15 +75,39 @@ bool Entity::collidesWith(Entity other){
 }
 
 void Entity::uncollide(Entity other){
-    //printf("colliding with x:%f\n", other.x);
-    //TODO do some actual uncollision here.
-    float ydist = fabs(( y+height/2 )-(other.y+other.height/2));
-    float ypen = fabs(ydist-(height/2)-(other.height/2));
-    y += ypen +0.0001f;
-    
-    printf("ypen: %f\n", ypen);
-    velocity_y = 0;
-    //velocity_x = 0;
+    //TODO do this for all four sides
+    if (bottom() < other.top() && bottom() > other.bottom()) {//move up
+        float ydist = fabs(( ymid() )-(other.ymid()));
+        printf("move up: %f\n", ydist);
+        //float ypen = fabs(ydist-(height/2)-(other.height/2));
+        //y += ypen + 0.0001f;
+        y = other.top()+0.001f;
+        velocity_y = 0;
+    }
+    else if(left() < other.right() && left() > other.left()){//move right
+        float xdist = fabs(( xmid() )-(other.xmid()));
+        printf("move right: %f\n", xdist);
+        //float xpen = fabs(xdist-(width/2)-(other.width/2));
+        //x += xpen + 0.0001f;
+        x = other.right() + 0.001f;
+        velocity_x = 0;
+    }
+    else if(right() < other.right() && right() > other.left()){//move right
+        float xdist = fabs(( xmid() )-(other.xmid()));
+        printf("move left: %f\n", xdist);
+        //float xpen = fabs(xdist-(width/2)-(other.width/2));
+        //x -= xpen - 0.01f;
+        x = other.left()-width-0.001f;
+        velocity_x = 0;
+    }
+    else if (top() > other.bottom() && top() < other.top()) {//move down
+        float ydist = fabs(( ymid() )-(other.ymid()));
+        printf("move down: %f\n", ydist);
+        //float ypen = fabs(ydist-(height/2)-(other.height/2));
+        //y -= ypen - 0.0001f;
+        y = other.bottom()-height-0.001f;
+        velocity_y = 0;
+    }
 }
 
 void Entity::Draw(ShaderProgram* program){
