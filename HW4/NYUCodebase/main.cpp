@@ -115,7 +115,7 @@ void initEntityArray(){
         }
     }
     
-    Entity player = *new Entity((LEVEL_WIDTH*TILE_SIZE)/2,-0.5,0.2,0.2);
+    Entity player = *new Entity((LEVEL_WIDTH*TILE_SIZE)/2,-0.5,0.24,0.24);
     player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
     player.type = PLAYER;
     entities.push_back(player);
