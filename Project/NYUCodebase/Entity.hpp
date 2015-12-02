@@ -23,6 +23,7 @@
 # define PLATFORM 0
 # define PLAYER 1
 # define BULLET 2
+# define BPLATFORM 3
 # define GRAVITY -9.8f
 
 class Entity{

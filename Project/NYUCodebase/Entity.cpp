@@ -13,7 +13,7 @@ Entity::Entity(float x, float y, float width, float height):
 x(x), y(y), width(width), height(height) {
     isAlive = true;
     isStatic = false;
-    friction = 1.5f;
+    friction = 2.5f;
     
     //just player
     leftContact = false;
@@ -60,6 +60,7 @@ void Entity::Update(float elapsed){
     }
     if (type == BULLET){
         y += velocity_y * FIXED_TIMESTEP;
+        x += velocity_x * FIXED_TIMESTEP;
         return;
     }
     float oldx = x;
