@@ -8,6 +8,7 @@
 #include "vector"
 #include "Entity.hpp"
 #include "SheetSprite.hpp"
+#include "Chunk.hpp"
 //#include "SDL_TTF.h"
 
 #include <SDL_mixer.h>
@@ -30,6 +31,9 @@ bool done;
 #define RWALL 1.5
 
 #define PLAYER_ENT entities[0]
+
+#define CHUNK_W 20
+#define CHUNK_H 10
 
 float timeLeftOver = 0.0f;
 float lastFrameTicks = 0.0f;
@@ -111,18 +115,20 @@ void procedurallyGenerate(){
 
 }
 
-std::vector<Entity> createMapChunk(std::vector<Entity> surroundingChunks[]){
+Chunk createMapChunk(Chunk surroundingChunks[]){
     //0 is topleft, etc
     
     /*
-     The rules for generating a chunk are as such
+     The rules for generating a chunk are such:
      Pass 1: If a (cardinally) adjacent chunk has a space the chunk has a bordering space
      Pass 2: If there is a cell with two adjacent spaces, it also becomes a space to "connect" them
      Pass 3: Cells that are spaces surrounded by brick convert a cardinal brick into a space, recursively n times
      Pass 4: If two spaces are diagonal to each other, then one of the other diagonals becomes breakable
      Pass 5: Sprincke breakable bricks everywhere. Maybe only near spaces
      */
-    
+//    20*10 at present sizes
+    Chunk* ch = new Chunk();
+
     
     if (surroundingChunks[1].size() > 0) {//check borders
         ;//where it has a hole, we make a hole
@@ -136,8 +142,7 @@ std::vector<Entity> createMapChunk(std::vector<Entity> surroundingChunks[]){
     if (surroundingChunks[7].size() > 0) {//check borders
         ;//where it has a hole, we make a hole
     }
-
-    return surroundingChunks[0];
+    return *ch;
 }
 
 void initEntityArray(GLuint spriteSheetTexture){
