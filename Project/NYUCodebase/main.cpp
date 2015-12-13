@@ -12,6 +12,7 @@
 //#include "SDL_TTF.h"
 
 #include <SDL_mixer.h>
+#include <vector>
 
 #ifdef _WINDOWS
 #define RESOURCE_FOLDER ""
@@ -62,7 +63,7 @@ Mix_Music *music;
 //.23
 
 //TODO rewrite level data
-unsigned int levelData[LEVEL_HEIGHT][LEVEL_WIDTH] =
+unsigned int levelData[LEVEL_HEIGHT][LEVEL_WIDTH]=
 {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
     {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
@@ -95,6 +96,77 @@ GLuint LoadTexture(const char *image_path) {
     return textureID;
 }
 
+void DrawText(ShaderProgram* program, int fontTexture, std::string text, float size, float spacing) {
+    for(int i=0; i < text.size(); i++){
+        /*std::cout << "(size+spacing) * 1) + (-0.5f * size)" << (((size+spacing) * 1.0f)+ (-0.5f * size)) << std::endl;
+        std::cout << "0.5f * size" << (0.5f * size) << std::endl;
+        std::cout << "-0.5f * size" << (-0.5f * size) << std::endl;*/
+        
+        int x = 2 + (text[i] - 'a') % 16;
+        int y = 5 + (text[i] - 'a')/16;
+        std::cout << "X: " << x << " Y: " << y << std::endl;
+        
+        Entity myEntity = *new Entity(0+(0.3*i),0,0.1,0.1);
+        myEntity.sprite = SheetSprite(fontTexture, (spacing+(x*(spacing+size)))/512.0f, (spacing+(y*(spacing+size)))/512.0f, 20.0f/512.0f, 20.0f/512.0f, 0.2);
+        myEntity.type = PLATFORM;
+        myEntity.isStatic = true;
+        menuEntities.push_back(myEntity);
+
+    }
+}
+
+//solution: build custom drawtext
+/*
+void DrawText(ShaderProgram* program, int fontTexture, std::string text, float size, float spacing) {
+    float texture_size = 1.0f/16.0f;
+    std::vector<float> vertexData;
+    std::vector<float> texCoordData;
+    for(int i=0; i < text.size(); i++) {
+        float texture_x = (float)(((int)text[i]) % 16) / 16.0f;
+        float texture_y = (float)(((int)text[i]) / 16) / 16.0f;
+                std::cout << text[i] << " : " << texture_x << " # " << texture_y << std::endl;
+        
+
+        vertexData.insert(vertexData.end(), {
+            ((size+spacing) * i) + (-0.5f * size), 0.5f * size,
+            ((size+spacing) * i) + (-0.5f * size), -0.5f * size,
+            ((size+spacing) * i) + (0.5f * size), 0.5f * size,
+            ((size+spacing) * i) + (0.5f * size), -0.5f * size,
+            ((size+spacing) * i) + (0.5f * size), 0.5f * size,
+            ((size+spacing) * i) + (-0.5f * size), -0.5f * size,
+        });
+        
+        for(int j=0; j < vertexData.size(); j++) {
+            std::cout << " | " << vertexData[j];
+        }
+        std::cout << std::endl;
+        
+        std::cout << "(size+spacing) * 1) + (-0.5f * size)" << (((size+spacing) * 1.0f)+ (-0.5f * size)) << std::endl;
+        std::cout << "0.5f * size" << (0.5f * size) << std::endl;
+        std::cout << "-0.5f * size" << (-0.5f * size) << std::endl;
+
+        texCoordData.insert(texCoordData.end(), {
+            texture_x, texture_y,
+            texture_x, texture_y + texture_size,
+            texture_x + texture_size, texture_y,
+            texture_x + texture_size, texture_y + texture_size,
+            texture_x + texture_size, texture_y,
+            texture_x, texture_y + texture_size,
+        }); }
+    
+    glUseProgram(program->programID);
+    glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertexData.data());
+    glEnableVertexAttribArray(program->positionAttribute);
+    glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoordData.data());
+    glEnableVertexAttribArray(program->texCoordAttribute);
+    glBindTexture(GL_TEXTURE_2D, fontTexture);
+    glDrawArrays(GL_TRIANGLES, 0, text.size() * 6);
+    glDisableVertexAttribArray(program->positionAttribute);
+    glDisableVertexAttribArray(program->texCoordAttribute);
+}*/
+
+
+
 void procedurallyGenerate(){
     for(int y = LEVEL_HEIGHT-2; y > 2; y--){
         for(int x = 2; x < LEVEL_WIDTH-2; x++){
@@ -116,32 +188,78 @@ void procedurallyGenerate(){
 }
 
 Chunk createMapChunk(Chunk surroundingChunks[]){
-    //0 is topleft, etc
-    
     /*
      The rules for generating a chunk are such:
      Pass 1: If a (cardinally) adjacent chunk has a space the chunk has a bordering space
      Pass 2: If there is a cell with two adjacent spaces, it also becomes a space to "connect" them
      Pass 3: Cells that are spaces surrounded by brick convert a cardinal brick into a space, recursively n times
      Pass 4: If two spaces are diagonal to each other, then one of the other diagonals becomes breakable
-     Pass 5: Sprincke breakable bricks everywhere. Maybe only near spaces
+     Pass 5: Sprinke breakable bricks everywhere. Maybe only near spaces
      */
 //    20*10 at present sizes
+    
     Chunk* ch = new Chunk();
+    ch->print();
+    
+    //pass 1
+    if (surroundingChunks != NULL) {
+        if (surroundingChunks[1].size() > 0) {//check top border
+            for (int i = 0; i < ch->width; i++) {
+                if (1 == surroundingChunks[1].get(ch->height-1, i))
+                    ch->set(0, i, 1);//where it has a hole, we make a hole
+            }
+        }
+        if (surroundingChunks[3].size() > 0) {//check left border
+            for (int i = 0; i < ch->height; i++) {
+                if (1 == surroundingChunks[3].get(i, ch->width-1))
+                    ch->set(i, 0, 1);//where it has a hole, we make a hole
+            }
+        }//4 is us
+        if (surroundingChunks[5].size() > 0) {//check right border
+            for (int i = 0; i < ch->width; i++) {
+                if (1 == surroundingChunks[5].get(0, i))
+                    ch->set(ch->height-i, i, 1);//where it has a hole, we make a hole
+            }
+        }
+        if (surroundingChunks[7].size() > 0) {//check bottom border
+            for (int i = 0; i < ch->height; i++) {
+                if (1 == surroundingChunks[7].get(i, 0))
+                    ch->set(i, ch->width-1, 1);//where it has a hole, we make a hole
+            }
+        }
+    }
+    else{//we should randomly seed or something
+        for (int i = 0; i < ch->height; i++) {
+            for (int j = 0; j < ch->width; j++) {
+                if ((rand() % 100 < 20)){
+                    ch->set(i, j, 1);
+                }
+            }
+        }
+    }
+
+    ch->print();
+    
+    //pass 2
+    for (int i = 0; i < ch->height; i++) {
+        for (int j = 0; j < ch->width; j++) {
+            int sum = ch->sumCardNeighbors(i, j);
+            if (sum > 1){
+                ch->set(i, j, 1);
+            }
+            else {
+                ;//we turn a random one into a space
+            }
+        }
+    }
+    //TODO: remove later
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 20; j++) {
+            levelData[i][j] = ch->get(i, j);
+        }
+    }
 
     
-    if (surroundingChunks[1].size() > 0) {//check borders
-        ;//where it has a hole, we make a hole
-    }
-    if (surroundingChunks[3].size() > 0) {//check borders
-        ;//where it has a hole, we make a hole
-    }//4 is us
-    if (surroundingChunks[5].size() > 0) {//check borders
-        ;//where it has a hole, we make a hole
-    }
-    if (surroundingChunks[7].size() > 0) {//check borders
-        ;//where it has a hole, we make a hole
-    }
     return *ch;
 }
 
@@ -181,71 +299,62 @@ void initEntityArray(GLuint spriteSheetTexture){
     }
 }
 
-void shootBullet(int direction) {//NEWS
-    Mix_PlayChannel( -1, pewpew, 0);
-    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");//this is global
-//    Entity newBullet = *new Entity(PLAYER_ENT.x+PLAYER_ENT.width/2.0f,PLAYER_ENT.y+0.2,0.01,0.1);
-    Entity newBullet = *new Entity(PLAYER_ENT.xmid(),PLAYER_ENT.ymid(),0.03,0.03);
-//    newBullet.sprite = SheetSprite(sSTex, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
-    newBullet.sprite = SheetSprite(sSTex, 0.0f/1024.0f, 576.0f/1024.0f, 70.0f/1024.0f, 70.0f/1024.0f, 0.2);
-    newBullet.type = BULLET;
-    switch (direction) {
-        case 0:
-            newBullet.velocity_y = 2.0;
-            break;
-        case 1:
-            newBullet.velocity_x = 2.0;
-            break;
-        case 2:
-            newBullet.velocity_x = -2.0;
-            break;
-        case 3:
-            newBullet.velocity_y = -2.0;
-            break;
-        default:
-            newBullet.velocity_y = 2.0;
-            break;
+int countLiveBullets(){
+    int tot = 0;
+    for (int i = 0; i < bullets.size(); i++) {
+        if (bullets[i].isAlive) {
+            tot++;
+        }
     }
-
-    bullets.push_back(newBullet);
+    return tot;
 }
 
-void setupMainMenu(GLuint spriteSheetTexture){
+
+//TODO: sometimes these are swallowed somehow
+void shootBullet(int direction) {//N.E.W.S.
+//    Mix_PlayChannel( -1, pewpew, 0);
+    
+    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");//this is global
+    Entity newBullet = *new Entity(PLAYER_ENT.xmid()-0.015,PLAYER_ENT.ymid()-0.015,0.03,0.03);
+    newBullet.sprite = SheetSprite(sSTex, 0.0f/1024.0f, 576.0f/1024.0f, 70.0f/1024.0f, 70.0f/1024.0f, 0.2);
+    newBullet.type = BULLET;
+    switch (direction){
+        case 0:
+            newBullet.velocity_y = 2.0f;
+            puts("up");
+            break;
+        case 1:
+            newBullet.velocity_x = 2.0f;
+            puts("right");
+            break;
+        case 2:
+            newBullet.velocity_x = -2.0f;
+            puts("left");
+            break;
+        case 3:
+            newBullet.y -= 0.20;
+            newBullet.velocity_y = -2.0f;
+            puts("down");
+            break;
+    }
+    bullets.push_back(newBullet);
+    std::cout <<  newBullet.x << " : " << newBullet.y << std::endl;
+}
+
+void setupMainMenu(ShaderProgram* program, GLuint spriteSheetTexture){
     //create a menu UI and such
     
     GLuint textTexture = LoadTexture(RESOURCE_FOLDER"font1.png");
     
     state = STATE_MAIN_MENU;
 
-    float letter = 27.0f;
-    Entity myEntity = *new Entity(0,0,0.1,0.1);
-    myEntity.sprite = SheetSprite(textTexture, (letter * 1.0f)/512.0f, (letter * 5.0f)/512.0f, letter/512.0f, letter/512.0f, 0.2);
-    myEntity.type = PLATFORM;
-    myEntity.isStatic = true;
-    menuEntities.push_back(myEntity);
-
-    Entity myEntity2 = *new Entity(-1.5,0.8,0.1,0.1);
-    myEntity2.sprite = SheetSprite(textTexture, (letter * 0.0f)/512.0f, (letter * 5.0f)/512.0f, 20.0f/512.0f, 20.0f/512.0f, 0.2);
-    myEntity2.type = PLATFORM;
-    myEntity2.isStatic = true;
-    menuEntities.push_back(myEntity2);
-
-    Entity myEntity3 = *new Entity(1.5f,-1.0,0.1,0.1);
-    myEntity3.sprite = SheetSprite(textTexture, (letter * 1.0f)/512.0f, (letter * 5.0f)/512.0f, 20.0f/512.0f, 20.0f/512.0f, 0.2);
-    myEntity3.type = PLATFORM;
-    myEntity3.isStatic = true;
-    menuEntities.push_back(myEntity3);
+    //TODO this is all random
+    float size = 12.5f;
+    float spacing = 12.1f;
+    std::string text = "test";
     
-    for (float i = 0; i < 4; i ++){
-        for(float j = 0.0f; j < 10; j++){
-            Entity myEntity = *new Entity(-1.35+((3*j)/10.0f),0.8-(i/8.0f),0.1,0.1);
-            myEntity.sprite = SheetSprite(spriteSheetTexture, 843.0f/1024.0f, 116.0f/1024.0f, 13.0f/1024.0f, 57.0f/1024.0f, 0.2);
-            myEntity.type = PLATFORM;
-            myEntity.isStatic = true;
-            myEntity.isAlive = true;
-            menuEntities.push_back(myEntity);
-        }
-    }
+    DrawText(program, textTexture,  text, size, spacing);//textTexture
+
 }
 
 void startGame(){
@@ -275,7 +384,8 @@ ShaderProgram Setup(){
     //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearColor(0.46f, 0.81f, 1.0f, 1.0f);
     GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
-    setupMainMenu(spriteSheetTexture);
+    std::cout << "ssTex:" << spriteSheetTexture << std::endl;
+    setupMainMenu(&program, spriteSheetTexture);
     initEntityArray(spriteSheetTexture);
 
     
@@ -410,8 +520,10 @@ void Update(float elapsed, ShaderProgram* program){
                     if(j != 0 && entities[j].isAlive && bullets[i].collidesWith(entities[j])){//do collision stuffs
                         if (entities[j].type == BPLATFORM){
                             entities[j].isAlive = false;
+                            entities[j].~Entity();
                         }
                         bullets[i].isAlive = false;
+                        bullets[i].~Entity();
                     }
                 }
             }
@@ -451,9 +563,7 @@ void Render(ShaderProgram* program){
             entities[i].Render(program);
         }
         for(int i=0; i < bullets.size(); i++){
-            if(bullets[i].isAlive){
-                bullets[i].Render(program);
-            }
+            bullets[i].Render(program);
         }
     }
 
@@ -470,7 +580,9 @@ void setupSound(){
 
 int main(int argc, char *argv[]){
     state = STATE_GAME_LEVEL;
+    createMapChunk(NULL);//TODO: use this properly
     procedurallyGenerate();
+    
     ShaderProgram program = Setup();
     //setupSound();
     
@@ -483,6 +595,9 @@ int main(int argc, char *argv[]){
     }
     for (int i = 0; i < entities.size(); i++) {
         entities[i].~Entity();
+    }
+    for (int i = 0; i < menuEntities.size(); i++) {
+        menuEntities[i].~Entity();
     }
     //Mix_FreeChunk(someSound);
     //Mix_FreeMusic(music);

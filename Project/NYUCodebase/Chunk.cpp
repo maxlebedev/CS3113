@@ -9,8 +9,10 @@
 #include "Chunk.hpp"
 
 Chunk::Chunk(){
-    chunk = new int[CHUNK_W*CHUNK_H];
-    chunkSize = 0;
+    chunk = new int[CHUNK_W*CHUNK_H]{0};
+    chunkSize = 200;
+    width = 20;
+    height = 10;
 }
 
 void Chunk::populate(int ch[CHUNK_H][CHUNK_W]){
@@ -23,9 +25,28 @@ void Chunk::populate(int ch[CHUNK_H][CHUNK_W]){
     }
 }
 
+void Chunk::print(){
+    for (int i = 0; i < chunkSize; i++){
+        std::cout << chunk[i] << ' ';
+        if (!(i % CHUNK_W)) {
+            std::cout << '\n';
+        }
+    }
+}
+
 void Chunk::set(int i, int j, int val){
     chunk[(i*CHUNK_W)+j] = val;
 }
+
+int Chunk::get(int i, int j){
+    return chunk[(i*CHUNK_W)+j];
+}
+
+int Chunk::sumCardNeighbors(int i, int j){
+    return chunk[(i*CHUNK_W)+j-1] + chunk[(i*CHUNK_W)+j+1] + chunk[((i+1)*CHUNK_W)+j]
+    + chunk[((i-1)*CHUNK_W)+j];
+}
+
 
 int Chunk::size(){
     return chunkSize;
