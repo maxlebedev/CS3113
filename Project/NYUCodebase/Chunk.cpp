@@ -8,6 +8,10 @@
 
 #include "Chunk.hpp"
 
+#define TILE_X 0.17f
+#define TILE_Y 0.20f
+
+
 Chunk::Chunk(){
     chunk = new int[CHUNK_W*CHUNK_H]{0};
     chunkSize = 200;
@@ -47,6 +51,13 @@ int Chunk::sumCardNeighbors(int i, int j){
     + chunk[((i-1)*CHUNK_W)+j];
 }
 
+float Chunk::tileGlobalX(int i, int j){
+    return (index.first * width * TILE_X) + (j*TILE_X);
+}
+
+float Chunk::tileGlobalY(int i, int j){
+    return (index.second * width * TILE_Y) + (i*TILE_Y);
+}
 
 int Chunk::size(){
     return chunkSize;

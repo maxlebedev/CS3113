@@ -23,6 +23,9 @@ public:
     void set(int i, int j, int val);
     int get(int i, int j);
     int sumCardNeighbors(int i, int j);
+    
+    float tileGlobalX(int i, int j);
+    float tileGlobalY(int i, int j);
 
     void print();
     
@@ -30,6 +33,7 @@ public:
     int chunkSize;
     int width;
     int height;
+    std::pair <int,int> index;
 
 };
 

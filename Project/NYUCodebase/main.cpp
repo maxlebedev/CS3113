@@ -62,27 +62,6 @@ Mix_Music *music;
 #define TILE_Y 0.20f
 //.23
 
-//TODO rewrite level data
-unsigned int levelData[LEVEL_HEIGHT][LEVEL_WIDTH]=
-{
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,0},
-    {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-};
-
 
 GLuint LoadTexture(const char *image_path) {
     SDL_Surface *surface = IMG_Load(image_path);
@@ -98,9 +77,6 @@ GLuint LoadTexture(const char *image_path) {
 
 void DrawText(ShaderProgram* program, int fontTexture, std::string text, float size, float spacing) {
     for(int i=0; i < text.size(); i++){
-        /*std::cout << "(size+spacing) * 1) + (-0.5f * size)" << (((size+spacing) * 1.0f)+ (-0.5f * size)) << std::endl;
-        std::cout << "0.5f * size" << (0.5f * size) << std::endl;
-        std::cout << "-0.5f * size" << (-0.5f * size) << std::endl;*/
         
         int x = 2 + (text[i] - 'a') % 16;
         int y = 5 + (text[i] - 'a')/16;
@@ -115,79 +91,9 @@ void DrawText(ShaderProgram* program, int fontTexture, std::string text, float s
     }
 }
 
-//solution: build custom drawtext
-/*
-void DrawText(ShaderProgram* program, int fontTexture, std::string text, float size, float spacing) {
-    float texture_size = 1.0f/16.0f;
-    std::vector<float> vertexData;
-    std::vector<float> texCoordData;
-    for(int i=0; i < text.size(); i++) {
-        float texture_x = (float)(((int)text[i]) % 16) / 16.0f;
-        float texture_y = (float)(((int)text[i]) / 16) / 16.0f;
-                std::cout << text[i] << " : " << texture_x << " # " << texture_y << std::endl;
-        
+//TODO: find some system of stransllating intra-chunk tiles to words coords
 
-        vertexData.insert(vertexData.end(), {
-            ((size+spacing) * i) + (-0.5f * size), 0.5f * size,
-            ((size+spacing) * i) + (-0.5f * size), -0.5f * size,
-            ((size+spacing) * i) + (0.5f * size), 0.5f * size,
-            ((size+spacing) * i) + (0.5f * size), -0.5f * size,
-            ((size+spacing) * i) + (0.5f * size), 0.5f * size,
-            ((size+spacing) * i) + (-0.5f * size), -0.5f * size,
-        });
-        
-        for(int j=0; j < vertexData.size(); j++) {
-            std::cout << " | " << vertexData[j];
-        }
-        std::cout << std::endl;
-        
-        std::cout << "(size+spacing) * 1) + (-0.5f * size)" << (((size+spacing) * 1.0f)+ (-0.5f * size)) << std::endl;
-        std::cout << "0.5f * size" << (0.5f * size) << std::endl;
-        std::cout << "-0.5f * size" << (-0.5f * size) << std::endl;
-
-        texCoordData.insert(texCoordData.end(), {
-            texture_x, texture_y,
-            texture_x, texture_y + texture_size,
-            texture_x + texture_size, texture_y,
-            texture_x + texture_size, texture_y + texture_size,
-            texture_x + texture_size, texture_y,
-            texture_x, texture_y + texture_size,
-        }); }
-    
-    glUseProgram(program->programID);
-    glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertexData.data());
-    glEnableVertexAttribArray(program->positionAttribute);
-    glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoordData.data());
-    glEnableVertexAttribArray(program->texCoordAttribute);
-    glBindTexture(GL_TEXTURE_2D, fontTexture);
-    glDrawArrays(GL_TRIANGLES, 0, text.size() * 6);
-    glDisableVertexAttribArray(program->positionAttribute);
-    glDisableVertexAttribArray(program->texCoordAttribute);
-}*/
-
-
-
-void procedurallyGenerate(){
-    for(int y = LEVEL_HEIGHT-2; y > 2; y--){
-        for(int x = 2; x < LEVEL_WIDTH-2; x++){
-            //if the tile 2 below you and 1 over is 1, 66% chance to be 1
-            if (levelData[y+2][x+1] || levelData[y+2][x-1]) {
-                if (rand() % 3){
-                    levelData[y][x] = 1;
-                }
-            }
-        }
-    }
-    for (int i = 0; i < LEVEL_HEIGHT; ++i){
-        for (int j = 0; j < LEVEL_WIDTH; ++j){
-            std::cout << levelData[i][j] << ' ';
-        }
-        std::cout << std::endl;
-    }
-
-}
-
-Chunk createMapChunk(Chunk surroundingChunks[]){
+Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
     /*
      The rules for generating a chunk are such:
      Pass 1: If a (cardinally) adjacent chunk has a space the chunk has a bordering space
@@ -199,6 +105,7 @@ Chunk createMapChunk(Chunk surroundingChunks[]){
 //    20*10 at present sizes
     
     Chunk* ch = new Chunk();
+    ch->index = index;
     ch->print();
     
     //pass 1
@@ -252,51 +159,42 @@ Chunk createMapChunk(Chunk surroundingChunks[]){
             }
         }
     }
-    //TODO: remove later
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 20; j++) {
-            levelData[i][j] = ch->get(i, j);
-        }
-    }
-
-    
     return *ch;
 }
 
-void initEntityArray(GLuint spriteSheetTexture){
-    
-    Entity player = *new Entity(0,-0.5,0.13,0.13);
-    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
-    player.type = PLAYER;
-    player.isAlive = false;
-    entities.push_back(player);
-    
-    //-1.5 to 1.5
-    //-1.0 to 0.8
-    
+
+void loadChunk(GLuint spriteSheetTexture, Chunk chunk){
+    //TODO: determine the coords by player position?
     for(int y=LEVEL_HEIGHT-1; y > 0 ; y--){
         for(int x=0; x < LEVEL_WIDTH; x++){
-            if(levelData[y][x]){
-                //(LEVEL_WIDTH*TILE_SIZE)
-                Entity myEntity = *new Entity(-1.5+(x*TILE_X),-(-1.0+0.05+(y*TILE_Y)),TILE_X,TILE_Y) ;
+            if(chunk.get(y, x)){// was levelData[y][x]
+                //TODO relegate the coords math to the chunk. index should be involved
+                
+                //Entity myEntity = *new Entity((x*TILE_X),-((y*TILE_Y)),TILE_X,TILE_Y);
+                Entity myEntity = *new Entity(chunk.tileGlobalX(y, x),-(chunk.tileGlobalY(y,x)),TILE_X,TILE_Y);
                 if (rand() % 100 < 20){
                     myEntity.type = BPLATFORM;
-                    //<SubTexture name="boxEmpty.png" x="0" y="432" width="70" height="70"/>
                     myEntity.sprite = SheetSprite(spriteSheetTexture, 0.0f/914.0f, 432.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
-
                 }
                 else{
                     myEntity.type = PLATFORM;
-                    //<SubTexture name="dirtCenter.png" x="720" y="864" width="70" height="70"/>
                     myEntity.sprite = SheetSprite(spriteSheetTexture, 504.0f/914.0f, 288.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
                 }
-
+                
                 myEntity.isStatic = true;
                 myEntity.isAlive = false;
                 entities.push_back(myEntity);
             }
         }
     }
+}
+
+void initPlayer(GLuint spriteSheetTexture){
+    Entity player = *new Entity(0,-0.5,0.13,0.13);
+    player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
+    player.type = PLAYER;
+    player.isAlive = false;
+    entities.push_back(player);
 }
 
 int countLiveBullets(){
@@ -341,9 +239,8 @@ void shootBullet(int direction) {//N.E.W.S.
     std::cout <<  newBullet.x << " : " << newBullet.y << std::endl;
 }
 
-void setupMainMenu(ShaderProgram* program, GLuint spriteSheetTexture){
+void setupMainMenu(ShaderProgram* program){
     //create a menu UI and such
-    
     GLuint textTexture = LoadTexture(RESOURCE_FOLDER"font1.png");
     
     state = STATE_MAIN_MENU;
@@ -385,15 +282,19 @@ ShaderProgram Setup(){
     glClearColor(0.46f, 0.81f, 1.0f, 1.0f);
     GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
     std::cout << "ssTex:" << spriteSheetTexture << std::endl;
-    setupMainMenu(&program, spriteSheetTexture);
-    initEntityArray(spriteSheetTexture);
-
+    setupMainMenu(&program);
+    initPlayer(spriteSheetTexture);
+    
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,0), NULL));//todo: probs still not the way we do this?
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,0), NULL));//do this on demand later
     
     program.setModelMatrix(modelMatrix);
     program.setProjectionMatrix(projectionMatrix);
     program.setViewMatrix(viewMatrix);
     
     glUseProgram(program.programID);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     return program;
 }
@@ -580,8 +481,6 @@ void setupSound(){
 
 int main(int argc, char *argv[]){
     state = STATE_GAME_LEVEL;
-    createMapChunk(NULL);//TODO: use this properly
-    procedurallyGenerate();
     
     ShaderProgram program = Setup();
     //setupSound();
