@@ -13,6 +13,9 @@
 
 #include <SDL_mixer.h>
 #include <vector>
+#include <map>
+#include <vector>
+
 
 #ifdef _WINDOWS
 #define RESOURCE_FOLDER ""
@@ -62,6 +65,9 @@ Mix_Music *music;
 #define TILE_Y 0.20f
 //.23
 
+std::map<std::pair<int, int>, Chunk> ChunkMap;
+
+
 
 GLuint LoadTexture(const char *image_path) {
     SDL_Surface *surface = IMG_Load(image_path);
@@ -80,7 +86,6 @@ void DrawText(ShaderProgram* program, int fontTexture, std::string text, float s
         
         int x = 2 + (text[i] - 'a') % 16;
         int y = 5 + (text[i] - 'a')/16;
-        std::cout << "X: " << x << " Y: " << y << std::endl;
         
         Entity myEntity = *new Entity(0+(0.3*i),0,0.1,0.1);
         myEntity.sprite = SheetSprite(fontTexture, (spacing+(x*(spacing+size)))/512.0f, (spacing+(y*(spacing+size)))/512.0f, 20.0f/512.0f, 20.0f/512.0f, 0.2);
@@ -91,7 +96,6 @@ void DrawText(ShaderProgram* program, int fontTexture, std::string text, float s
     }
 }
 
-//TODO: find some system of stransllating intra-chunk tiles to words coords
 
 Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
     /*
@@ -159,6 +163,8 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
             }
         }
     }
+    
+    ChunkMap[ch->index] = *ch;
     return *ch;
 }
 
@@ -274,6 +280,7 @@ ShaderProgram Setup(){
     
     ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
     
+    //this regulates zoom
     projectionMatrix.setOrthoProjection(-1.7777f, 1.77777f, -1.0f, 1.0f, -1.0f, 1.0f);
     
     glViewport(0, 0, 800, 600);
@@ -286,7 +293,15 @@ ShaderProgram Setup(){
     initPlayer(spriteSheetTexture);
     
     loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,0), NULL));//todo: probs still not the way we do this?
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,0), NULL));//do this on demand later
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,0), NULL));//do all this on demand later
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,1), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,1), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,0), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,-1), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,-1), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,-1), NULL));
+    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,1), NULL));
+
     
     program.setModelMatrix(modelMatrix);
     program.setProjectionMatrix(projectionMatrix);
@@ -429,6 +444,11 @@ void Update(float elapsed, ShaderProgram* program){
                 }
             }
         }
+        //TODO remove
+        vector<int> coords = Chunk::fromGlobalCoords(PLAYER_ENT.x,PLAYER_ENT.y);
+        cout << coords[0] << " : " << coords[1] << " : "  << coords[2] << " : " << coords[3] <<  endl;
+
+        
         viewMatrix.identity();
         viewMatrix.Translate(-(PLAYER_ENT.x), -(PLAYER_ENT.y), 0);//(PLAYER_ENT.y)
         program->setViewMatrix(viewMatrix);
