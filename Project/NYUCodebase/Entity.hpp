@@ -24,6 +24,8 @@
 # define PLAYER 1
 # define BULLET 2
 # define BPLATFORM 3
+# define ENEMY 4
+
 # define GRAVITY -9.8f
 
 class Entity{
@@ -55,11 +57,14 @@ public:
     bool isAlive;
     bool isStatic;
     
-    //int immune; //immune to gravity
     bool leftContact;
     bool rightContact;
 //    bool topContact;
     bool bottomContact;
+    
+    bool gravity;
+    bool godmode;
+    Entity* player;//enemies need a player to chase
     
 };
 

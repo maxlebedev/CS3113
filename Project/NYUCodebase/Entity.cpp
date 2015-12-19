@@ -14,6 +14,7 @@ x(x), y(y), width(width), height(height) {
     isAlive = true;
     isStatic = false;
     friction = 2.5f;
+    gravity = true;
     
     //just player
     leftContact = false;
@@ -21,6 +22,7 @@ x(x), y(y), width(width), height(height) {
 //    topContact = false;
     bottomContact = false;
 
+    godmode = false;
 }
 
 float Entity::bottom(){
@@ -58,12 +60,26 @@ void Entity::Update(float elapsed){
         //do nothing
         return;
     }
+    if (type == ENEMY) {
+        // float slowly towards player
+        float diffx = xmid() - player->xmid();
+        float diffy = ymid() - player->ymid();
+        float distance = sqrtf((diffx*diffx)+(diffy*diffy));
+        if (distance < 1.5f) {
+            velocity_y = -0.5f * diffy;
+            velocity_x = -0.5f * diffx;
+            y += velocity_y * FIXED_TIMESTEP;
+            x += velocity_x * FIXED_TIMESTEP;
+        }
+    }
+    
     if (type == BULLET){
         y += velocity_y * FIXED_TIMESTEP;
         x += velocity_x * FIXED_TIMESTEP;
         return;
     }
     float oldx = x;
+    float oldy = y;
 
     velocity_x = lerp(velocity_x, 0.0f, FIXED_TIMESTEP * friction);
     velocity_y = lerp(velocity_y, 0.0f, FIXED_TIMESTEP * friction);
@@ -72,12 +88,14 @@ void Entity::Update(float elapsed){
     x += velocity_x * FIXED_TIMESTEP;
     y += velocity_y * FIXED_TIMESTEP;
 
-  
-    velocity_y += GRAVITY * elapsed;
+    if (gravity && !godmode) {
+        velocity_y += GRAVITY * elapsed;
+    }
+    
     if (fabs(velocity_x) < 0.001f)
         velocity_x = 0;
     
-    if (x != oldx){//the theory is that this stops random locks
+    if (x != oldx || fabs(y - oldy) > 0.20f){//the theory is that this stops random locks
         leftContact = false;
         rightContact = false;
     }
@@ -89,49 +107,11 @@ bool Entity::collidesWith(Entity other){
         return false;
     return true;
 }
-/* old
-void Entity::uncollide(Entity other){
-    //TODO do this for all four sides
-    if (bottom() < other.top() && bottom() > other.bottom()) {//move up
-        float ydist = fabs(( ymid() )-(other.ymid()));
-        printf("move up: %f\n", ydist);
-        //float ypen = fabs(ydist-(height/2)-(other.height/2));
-        //y += ypen + 0.0001f;
-        y = other.top()+0.001f;
-        velocity_y = 0;
-    }
-    else if (top() > other.bottom() && top() < other.top()) {//move down
-        float ydist = fabs(( ymid() )-(other.ymid()));
-        printf("move down: %f\n", ydist);
-        //float ypen = fabs(ydist-(height/2)-(other.height/2));
-        //y -= ypen - 0.0001f;
-        y = other.bottom()-height-0.001f;
-        velocity_y = 0;
-    }
-    else if(left() < other.right() && left() > other.left()){//move right
-        float xdist = fabs(( xmid() )-(other.xmid()));
-        printf("move right: %f\n", xdist);
-        //float xpen = fabs(xdist-(width/2)-(other.width/2));
-        //x += xpen + 0.0001f;
-        x = other.right() + 0.001f;
-        velocity_x = 0;
-    }
-    else if(right() < other.right() && right() > other.left()){//move right
-        float xdist = fabs(( xmid() )-(other.xmid()));
-        printf("move left: %f\n", xdist);
-        //float xpen = fabs(xdist-(width/2)-(other.width/2));
-        //x -= xpen - 0.01f;
-        x = other.left()-width-0.001f;
-        velocity_x = 0;
-    }
-}
- //*/
 
-//*
 void Entity::uncollide(Entity other){
         //Determine which corner has penetrated. Push out to the closes side
-        //Worst case scnario I "fall through"
-    if ((bottom() < other.top() && bottom() > other.bottom()) && (left() < other.right() && left() > other.left()) ) {
+        //Worst case scenario I "fall through"
+    if ((bottom() < other.top() && bottom() > other.bottom()) && (left() < other.right() && left() > other.left())) {
         //top right coner
         float xdiff = other.right()-left();
         float ydiff = other.top()-bottom();

@@ -71,11 +71,12 @@ std::pair <float,float> Chunk::toGlobalCoords(int i, int j){//This is approximat
     
      int chunkx = fmod(x,(Chunk::width * TILE_X))/TILE_X;
      int chunky = fmod(y,(Chunk::height * TILE_Y))/TILE_Y;
-     chunkx = chunkx > 0 ? chunkx : (Chunk::width -1  + (chunkx % Chunk::width));
-     chunky = chunky > 0 ? chunky : -1*(chunky % Chunk::height);
+     chunkx = chunkx >= 0 ? chunkx : (Chunk::width -1  + (chunkx % Chunk::width));
+     chunky = chunky >= 0 ? chunky : -1*(chunky % Chunk::height);
      
      //printf("rounded:: indX: %d indy: %d tilex: %d tiley: %d \n", chunkIndx, chunkIndy, chunkx, chunky);
     
+     //todo potential problem: this goes from 0-18 andnot 0-19
      vector<int> coords = {chunkIndx, chunkIndy, chunkx, chunky};
      
      return coords;

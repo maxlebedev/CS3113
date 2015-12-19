@@ -67,6 +67,12 @@ Mix_Music *music;
 
 std::map<std::pair<int, int>, Chunk> ChunkMap;
 
+GLuint spriteSheetTexture;
+
+float zoom = 1.0f;
+//ShaderProgram* program;
+
+
 
 
 GLuint LoadTexture(const char *image_path) {
@@ -96,6 +102,19 @@ void DrawText(ShaderProgram* program, int fontTexture, std::string text, float s
     }
 }
 
+void sampleSpawnEnemies(){
+    for (int i = -5; i < 5; i++) {
+        Entity enemy = *new Entity(i*0.01f,i*-0.5f,0.13,0.13);
+        //<SubTexture name="torch.png" x="72" y="72" width="70" height="70"/>
+        enemy.sprite = SheetSprite(spriteSheetTexture, 72.0f/914.0f, 72.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
+        enemy.type = ENEMY;
+        enemy.isAlive = true;
+        enemy.player = &PLAYER_ENT;
+        entities.push_back(enemy);
+
+    }
+}
+
 
 Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
     /*
@@ -110,7 +129,6 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
     
     Chunk* ch = new Chunk();
     ch->index = index;
-    ch->print();
     
     //pass 1
     if (surroundingChunks != NULL) {
@@ -148,8 +166,6 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
             }
         }
     }
-
-    ch->print();
     
     //pass 2
     for (int i = 0; i < ch->height; i++) {
@@ -169,14 +185,10 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
 }
 
 
-void loadChunk(GLuint spriteSheetTexture, Chunk chunk){
-    //TODO: determine the coords by player position?
+void loadChunk(Chunk chunk, bool alive){
     for(int y=LEVEL_HEIGHT-1; y > 0 ; y--){
         for(int x=0; x < LEVEL_WIDTH; x++){
-            if(chunk.get(y, x)){// was levelData[y][x]
-                //TODO relegate the coords math to the chunk. index should be involved
-                
-                //Entity myEntity = *new Entity((x*TILE_X),-((y*TILE_Y)),TILE_X,TILE_Y);
+            if(chunk.get(y, x)){
                 Entity myEntity = *new Entity(chunk.tileGlobalX(y, x),-(chunk.tileGlobalY(y,x)),TILE_X,TILE_Y);
                 if (rand() % 100 < 20){
                     myEntity.type = BPLATFORM;
@@ -188,14 +200,14 @@ void loadChunk(GLuint spriteSheetTexture, Chunk chunk){
                 }
                 
                 myEntity.isStatic = true;
-                myEntity.isAlive = false;
+                myEntity.isAlive = alive;
                 entities.push_back(myEntity);
             }
         }
     }
 }
 
-void initPlayer(GLuint spriteSheetTexture){
+void initPlayer(){
     Entity player = *new Entity(0,-0.5,0.13,0.13);
     player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
     player.type = PLAYER;
@@ -242,7 +254,6 @@ void shootBullet(int direction) {//N.E.W.S.
             break;
     }
     bullets.push_back(newBullet);
-    std::cout <<  newBullet.x << " : " << newBullet.y << std::endl;
 }
 
 void setupMainMenu(ShaderProgram* program){
@@ -251,7 +262,7 @@ void setupMainMenu(ShaderProgram* program){
     
     state = STATE_MAIN_MENU;
 
-    //TODO this is all random
+    //TODO this is all random, replace DrawText
     float size = 12.5f;
     float spacing = 12.1f;
     std::string text = "test";
@@ -267,6 +278,7 @@ void startGame(){
     for (int i = 0; i < entities.size(); i++) {
         entities[i].isAlive = true;
     }
+    //sampleSpawnEnemies();//todo: remove?
 }
 
 ShaderProgram Setup(){
@@ -287,20 +299,21 @@ ShaderProgram Setup(){
     
     //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClearColor(0.46f, 0.81f, 1.0f, 1.0f);
-    GLuint spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
-    std::cout << "ssTex:" << spriteSheetTexture << std::endl;
-    setupMainMenu(&program);
-    initPlayer(spriteSheetTexture);
     
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,0), NULL));//todo: probs still not the way we do this?
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,0), NULL));//do all this on demand later
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,1), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,1), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,0), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,-1), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(0,-1), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(1,-1), NULL));
-    loadChunk(spriteSheetTexture, createMapChunk(std::make_pair(-1,1), NULL));
+    spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
+    
+    setupMainMenu(&program);
+    initPlayer();
+    
+    loadChunk( createMapChunk(std::make_pair(0,0), NULL), false);//todo: probs still not the way we do this?
+    loadChunk( createMapChunk(std::make_pair(1,0), NULL), false);//do all this on demand later
+    loadChunk( createMapChunk(std::make_pair(1,1), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(0,1), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(-1,0), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(-1,-1), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(0,-1), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(1,-1), NULL), false);
+    loadChunk( createMapChunk(std::make_pair(-1,1), NULL), false);
 
     
     program.setModelMatrix(modelMatrix);
@@ -311,10 +324,11 @@ ShaderProgram Setup(){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
+    
     return program;
 }
 
-void PlayerInput(bool& done){
+void PlayerInput(bool& done, ShaderProgram program){
     SDL_Event event;
     
     while (SDL_PollEvent(&event)) {
@@ -324,30 +338,41 @@ void PlayerInput(bool& done){
         
         else if (event.type == SDL_KEYDOWN){
             if (event.key.keysym.scancode == SDL_SCANCODE_LEFT){
-                if (PLAYER_ENT.leftContact) {
-                    puts("not lefting");//do nothing
+                if (PLAYER_ENT.godmode) {
+                    PLAYER_ENT.acceleration_x += -2.2;
                 }
                 else{
-                    PLAYER_ENT.acceleration_x = -1.2;
-                    if (PLAYER_ENT.rightContact) {
-                        PLAYER_ENT.rightContact = false;
-                        //PLAYER_ENT.acceleration_x = -6.0;
+                    if (PLAYER_ENT.leftContact) {
+                        puts("not lefting");//do nothing
                     }
+                    else{
+                        PLAYER_ENT.acceleration_x = -2.2;
+                        if (PLAYER_ENT.rightContact) {
+                            PLAYER_ENT.rightContact = false;
+                        }
+                    }
+
                 }
             }
             
             else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT){
-                if (PLAYER_ENT.rightContact) {
-                    puts("not righting");//do nothing
+                if (PLAYER_ENT.godmode) {
+                    PLAYER_ENT.acceleration_x += 2.2;
                 }
                 else{
-                    PLAYER_ENT.acceleration_x = 1.2;
-                    if (PLAYER_ENT.leftContact) {
-                        PLAYER_ENT.leftContact = false;
-                        //PLAYER_ENT.acceleration_x = 6.0;
+                    if (PLAYER_ENT.rightContact) {
+                        puts("not righting");//do nothing
                     }
+                    else{
+                        PLAYER_ENT.acceleration_x = 2.2;
+                        if (PLAYER_ENT.leftContact) {
+                            PLAYER_ENT.leftContact = false;
+                        }
+                    }
+
                 }
             }
+ 
             else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE){
                 if (state == STATE_MAIN_MENU) {
                     state = STATE_GAME_LEVEL;
@@ -371,23 +396,59 @@ void PlayerInput(bool& done){
                         PLAYER_ENT.velocity_y += 3.0f;
                 }
             }
+            else if (event.key.keysym.scancode == SDL_SCANCODE_I){//toggle immunity to gravity TODO: remove later
+                if (state != STATE_MAIN_MENU) {
+                    PLAYER_ENT.gravity = !PLAYER_ENT.gravity;
+                }
+            }
+            else if (event.key.keysym.scancode == SDL_SCANCODE_G){
+                PLAYER_ENT.godmode = !PLAYER_ENT.godmode;
+
+            }
+            
+            else if (event.key.keysym.scancode == SDL_SCANCODE_Z){
+                zoom += 0.5;
+                projectionMatrix.setOrthoProjection(zoom*-1.7777f, zoom*1.77777f, zoom*-1.0f, zoom*1.0f, zoom*-1.0f, zoom*1.0f);
+                program.setModelMatrix(modelMatrix);
+                program.setProjectionMatrix(projectionMatrix);
+                program.setViewMatrix(viewMatrix);
+                glUseProgram(program.programID);
+            }
+            else if (event.key.keysym.scancode == SDL_SCANCODE_X){
+                zoom -= 0.1;
+                projectionMatrix.setOrthoProjection(zoom*-1.7777f, zoom*1.77777f, zoom*-1.0f, zoom*1.0f, zoom*-1.0f, zoom*1.0f);
+                program.setModelMatrix(modelMatrix);
+                program.setProjectionMatrix(projectionMatrix);
+                program.setViewMatrix(viewMatrix);
+                glUseProgram(program.programID);
+            }
 
             else if (event.key.keysym.scancode == SDL_SCANCODE_UP){
-                if (PLAYER_ENT.bottomContact) {
-                    PLAYER_ENT.velocity_y += 3.0f;
-                    PLAYER_ENT.bottomContact = false;
+                if (PLAYER_ENT.godmode) {
+                    PLAYER_ENT.acceleration_y += 2.2;
                 }
-                else if (PLAYER_ENT.leftContact) {
-                    PLAYER_ENT.velocity_y += 3.0f;
-                    PLAYER_ENT.velocity_x += 1.7f;
-                    PLAYER_ENT.leftContact = false;
-                    PLAYER_ENT.rightContact = false;
+                else{
+                    if (PLAYER_ENT.bottomContact) {
+                        PLAYER_ENT.velocity_y += 3.0f;
+                        PLAYER_ENT.bottomContact = false;
+                    }
+                    else if (PLAYER_ENT.leftContact) {
+                        PLAYER_ENT.velocity_y += 3.0f;
+                        PLAYER_ENT.velocity_x += 1.7f;
+                        PLAYER_ENT.leftContact = false;
+                        PLAYER_ENT.rightContact = false;
+                    }
+                    else if (PLAYER_ENT.rightContact) {
+                        PLAYER_ENT.velocity_y += 3.0f;
+                        PLAYER_ENT.velocity_x -= 1.7f;
+                        PLAYER_ENT.rightContact = false;
+                        PLAYER_ENT.leftContact = false;
+                    }
                 }
-                else if (PLAYER_ENT.rightContact) {
-                    PLAYER_ENT.velocity_y += 3.0f;
-                    PLAYER_ENT.velocity_x -= 1.7f;
-                    PLAYER_ENT.rightContact = false;
-                    PLAYER_ENT.leftContact = false;
+            }
+            else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN){
+                if (PLAYER_ENT.godmode) {
+                    PLAYER_ENT.acceleration_y += -2.2;
                 }
             }
             else if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE){
@@ -408,6 +469,58 @@ void PlayerInput(bool& done){
     }
 }
 
+void loadIfEmpty(pair<int, int> p ){
+    if (ChunkMap.find(p) == ChunkMap.end()) {
+        loadChunk(createMapChunk(p, NULL), true);
+    }
+}
+
+void loadChunks(){
+    vector<int> coords = Chunk::fromGlobalCoords(PLAYER_ENT.x,-1*(PLAYER_ENT.y));
+    cout << coords[0] << " : " << coords[1] << " : "  << coords[2] << " : " << coords[3] <<  endl;
+    //if we are at the edge of a chunk, load more
+    pair<int,int> tmppair;
+    if (coords[2] == 0){
+
+        loadIfEmpty(make_pair(coords[0]-1,coords[1]+1));
+        loadIfEmpty(make_pair(coords[0]-1,coords[1]));
+        loadIfEmpty(make_pair(coords[0]-1,coords[1]-1));
+        
+        loadIfEmpty(make_pair(coords[0]-2,coords[1]+1));
+        loadIfEmpty(make_pair(coords[0]-2,coords[1]));
+        loadIfEmpty(make_pair(coords[0]-2,coords[1]-1));
+    }
+    else if(coords[2] == 19){
+        loadIfEmpty(make_pair(coords[0]+1,coords[1]+1));
+        loadIfEmpty(make_pair(coords[0]+1,coords[1]));
+        loadIfEmpty(make_pair(coords[0]+1,coords[1]-1));
+        
+        loadIfEmpty(make_pair(coords[0]+2,coords[1]+1));
+        loadIfEmpty(make_pair(coords[0]+2,coords[1]));
+        loadIfEmpty(make_pair(coords[0]+2,coords[1]-1));
+    }
+    else if(coords[3] == 9){
+        loadIfEmpty(make_pair(-1*(coords[0]+1),coords[1]-1));
+        loadIfEmpty(make_pair(-1*(coords[0]),coords[1]-1));
+        loadIfEmpty(make_pair(-1*(coords[0]-1),coords[1]-1));
+        
+        loadIfEmpty(make_pair(-1*(coords[0]+1),coords[1]-2));
+        loadIfEmpty(make_pair(-1*(coords[0]),coords[1]-2));
+        loadIfEmpty(make_pair(-1*(coords[0]-1),coords[1]-2));
+    }
+    else if(coords[3] == 0){
+        
+        loadIfEmpty(make_pair(coords[0]+1,(coords[1]+1)));
+        loadIfEmpty(make_pair(coords[0],(coords[1]+1)));
+        loadIfEmpty(make_pair(coords[0]-1,(coords[1]+1)));
+        
+        loadIfEmpty(make_pair(coords[0]+1,(coords[1]+2)));
+        loadIfEmpty(make_pair(coords[0],(coords[1]+2)));
+        loadIfEmpty(make_pair(coords[0]-1,(coords[1]+2)));
+    }
+}
+
+
 void Update(float elapsed, ShaderProgram* program){
     if(state == STATE_MAIN_MENU) {
         for(int i=0; i < menuEntities.size(); i++) {//loop through entities and update all
@@ -419,11 +532,13 @@ void Update(float elapsed, ShaderProgram* program){
             entities[i].Update(elapsed);
         }
         
-        for(int i=0; i < entities.size(); i++) {
-            if (entities[i].isAlive && !entities[i].isStatic){
-                for(int j=0; j < entities.size(); j++){
-                    if(i!=j && entities[j].isAlive && entities[i].collidesWith(entities[j])){
-                        entities[i].uncollide(entities[j]);
+        if (!PLAYER_ENT.godmode) {
+            for(int i=0; i < entities.size(); i++) {
+                if (entities[i].isAlive && !entities[i].isStatic){
+                    for(int j=0; j < entities.size(); j++){
+                        if(i!=j && entities[j].isAlive && entities[i].collidesWith(entities[j])){
+                            entities[i].uncollide(entities[j]);
+                        }
                     }
                 }
             }
@@ -444,11 +559,8 @@ void Update(float elapsed, ShaderProgram* program){
                 }
             }
         }
-        //TODO remove
-        vector<int> coords = Chunk::fromGlobalCoords(PLAYER_ENT.x,PLAYER_ENT.y);
-        cout << coords[0] << " : " << coords[1] << " : "  << coords[2] << " : " << coords[3] <<  endl;
+        loadChunks();
 
-        
         viewMatrix.identity();
         viewMatrix.Translate(-(PLAYER_ENT.x), -(PLAYER_ENT.y), 0);//(PLAYER_ENT.y)
         program->setViewMatrix(viewMatrix);
@@ -495,7 +607,7 @@ void setupSound(){
     Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 4096 );
     pewpew = Mix_LoadWAV(RESOURCE_FOLDER"Laser.wav");
     
-    music = Mix_LoadMUS( "Clockwork_Grey_Interlude.mp3");
+    music = Mix_LoadMUS("Clockwork_Grey_Interlude.mp3");
     Mix_PlayMusic(music, -1);
 }
 
@@ -507,7 +619,7 @@ int main(int argc, char *argv[]){
     
     done = false;
     while (!done) {
-        PlayerInput(done);
+        PlayerInput(done, program);
         fixedTSUpdate(&program);
         Render(&program);
         glUseProgram(program.programID);
