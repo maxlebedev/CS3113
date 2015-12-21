@@ -284,7 +284,7 @@ void loadChunk(Chunk chunk, bool alive){
 
 
 void initPlayer(){
-    Entity player = *new Entity(0,-0.5,0.13,0.13);
+    Entity player = *new Entity(0,-0.5,0.13,0.15);
     player.sprite = SheetSprite(spriteSheetTexture, 792.0f/914.0f, 828.0f/936.0f, 48.0f/914.0f, 106.0f/936.0f, 0.2);
     player.type = PLAYER;
     player.isAlive = true;
@@ -367,7 +367,7 @@ void startGame(){
 
 ShaderProgram Setup(){
     SDL_Init(SDL_INIT_VIDEO);
-    displayWindow = SDL_CreateWindow("Platforms", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
+    displayWindow = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_OPENGL);
     SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
     SDL_GL_MakeCurrent(displayWindow, context);
 #ifdef _WINDOWS
