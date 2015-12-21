@@ -167,15 +167,14 @@ void setupMainMenu(ShaderProgram* program){
 
 
 void spawnEnemy(){
-    float randx = (static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/2.0f))) - 1.0f;
-    float randy = (static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/2.0f))) - 1.0f;
-    if(fabs(randx) < 0.5f ){
-        randx += randx;
+    float randx = (static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/1.0f))) + 0.5f;
+    if(rand() % 2){
+        randx = -1 * randx;
     }
-    if(fabs(randy) < 0.5f ){
-        randy += randy;
+    float randy = (static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/1.0f))) + 0.5f;
+    if(rand() % 2){
+        randy = -1 * randy;
     }
-
     Entity enemy = *new Entity(PLAYER_ENT.xmid()+randx,PLAYER_ENT.ymid()+randy,0.13,0.13);
     enemy.sprite = SheetSprite(spriteSheetTexture, 72.0f/914.0f, 72.0f/936.0f, 70.0f/914.0f, 70.0f/936.0f, 0.2);
     enemy.type = ENEMY;
@@ -190,8 +189,8 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
      The rules for generating a chunk are such:
      Pass 1: If a (cardinally) adjacent chunk has a space the chunk has a bordering space
      Pass 2: If there is a cell with two adjacent spaces, it also becomes a space to "connect" them
-     Pass 3: Cells that are spaces surrounded by brick convert a cardinal brick into a space, recursively n times
-     Pass 4: If two spaces are diagonal to each other, then one of the other diagonals becomes breakable
+     Pass X: Cells that are spaces surrounded by brick convert a cardinal brick into a space, recursively n times
+     Pass X: If two spaces are diagonal to each other, then one of the other diagonals becomes breakable
      Pass 5: Sprinke breakable bricks everywhere. Maybe only near spaces
      */
 //    20*10 at present sizes
@@ -200,41 +199,48 @@ Chunk createMapChunk(std::pair <int,int> index, Chunk surroundingChunks[]){
     ch->index = index;
     
     //pass 1
+    
     if (surroundingChunks != NULL) {
-        if (surroundingChunks[1].size() > 0) {//check top border
+
+        Chunk tmpchunk;
+        if (ChunkMap.find(make_pair(index.first,index.second+1)) != ChunkMap.end()) {//check top border
+            tmpchunk = ChunkMap[(make_pair(index.first,index.second+1))];
             for (int i = 0; i < ch->width; i++) {
-                if (1 == surroundingChunks[1].get(ch->height-1, i))
+                if (1 == tmpchunk.get(ch->height-1, i))
                     ch->set(0, i, 1);//where it has a hole, we make a hole
             }
         }
-        if (surroundingChunks[3].size() > 0) {//check left border
+        if (ChunkMap.find(make_pair(index.first-1,index.second)) != ChunkMap.end()) {//check left border
+            tmpchunk = ChunkMap[(make_pair(index.first-1,index.second))];
             for (int i = 0; i < ch->height; i++) {
-                if (1 == surroundingChunks[3].get(i, ch->width-1))
+                if (1 == tmpchunk.get(i, ch->width-1))
                     ch->set(i, 0, 1);//where it has a hole, we make a hole
             }
-        }//4 is us
-        if (surroundingChunks[5].size() > 0) {//check right border
+        }
+        if (ChunkMap.find(make_pair(index.first+1,index.second)) != ChunkMap.end()) {//check right border
+            tmpchunk = ChunkMap[(make_pair(index.first+1,index.second))];
             for (int i = 0; i < ch->width; i++) {
-                if (1 == surroundingChunks[5].get(0, i))
+                if (1 == tmpchunk.get(0, i))
                     ch->set(ch->height-i, i, 1);//where it has a hole, we make a hole
             }
         }
-        if (surroundingChunks[7].size() > 0) {//check bottom border
+        if (ChunkMap.find(make_pair(index.first,index.second-1)) != ChunkMap.end()) {//check bottom border
+            tmpchunk = ChunkMap[(make_pair(index.first,index.second-1))];
             for (int i = 0; i < ch->height; i++) {
-                if (1 == surroundingChunks[7].get(i, 0))
+                if (1 == tmpchunk.get(i, 0))
                     ch->set(i, ch->width-1, 1);//where it has a hole, we make a hole
             }
         }
     }
-    else{//we should randomly seed or something
-        for (int i = 0; i < ch->height; i++) {
-            for (int j = 0; j < ch->width; j++) {
-                if ((rand() % 100 < 20)){
-                    ch->set(i, j, 1);
-                }
+    //Pass 5
+    for (int i = 0; i < ch->height; i++) {
+        for (int j = 0; j < ch->width; j++) {
+            if ((rand() % 100 < 20)){
+                ch->set(i, j, 1);
             }
         }
     }
+
     
     //pass 2
     for (int i = 0; i < ch->height; i++) {
@@ -286,7 +292,7 @@ void initPlayer(){
 }
 
 void setupEntities(ShaderProgram* program){
-    spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
+    spriteSheetTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet2.png");
     setupMainMenu(program);
 
     
@@ -302,47 +308,39 @@ void setupEntities(ShaderProgram* program){
     loadChunk( createMapChunk(std::make_pair(0,-1), NULL), false);
     loadChunk( createMapChunk(std::make_pair(1,-1), NULL), false);
     loadChunk( createMapChunk(std::make_pair(-1,1), NULL), false);
-    LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
-}
-
-int countLiveBullets(){
-    int tot = 0;
-    for (int i = 0; i < bullets.size(); i++) {
-        if (bullets[i].isAlive) {
-            tot++;
-        }
-    }
-    return tot;
+    LoadTexture(RESOURCE_FOLDER"tiles_spritesheet2.png");
 }
 
 
 //TODO: sometimes these are swallowed somehow
 void shootBullet(int direction) {//N.E.W.S.
-//    Mix_PlayChannel( -1, pewpew, 0);
-    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
+    GLuint sSTex = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet2.png");
     Entity newBullet = *new Entity(PLAYER_ENT.xmid()-0.015,PLAYER_ENT.ymid()-0.015,0.03,0.03);
     newBullet.sprite = SheetSprite(sSTex, 0.0f/1024.0f, 576.0f/1024.0f, 70.0f/1024.0f, 70.0f/1024.0f, 0.2);
     newBullet.type = BULLET;
     switch (direction){
         case 0:
             newBullet.velocity_y = 2.0f;
-            puts("up");
+            //puts("up");
             break;
         case 1:
+            newBullet.x += 0.02f;
             newBullet.velocity_x = 2.0f;
-            puts("right");
+            //puts("right");
             break;
         case 2:
+            newBullet.x -= 0.02f;
             newBullet.velocity_x = -2.0f;
-            puts("left");
+            //puts("left");
             break;
         case 3:
-            newBullet.y -= 0.20;
+            newBullet.y -= 0.02f;
             newBullet.velocity_y = -2.0f;
-            puts("down");
+            //puts("down");
             break;
     }
     bullets.push_back(newBullet);
+    Mix_PlayChannel( -1, pewpew, 0);
 }
 
 
@@ -364,7 +362,7 @@ void startGame(){
     loadChunk( createMapChunk(std::make_pair(0,-1), NULL), true);
     loadChunk( createMapChunk(std::make_pair(1,-1), NULL), true);
     loadChunk( createMapChunk(std::make_pair(-1,1), NULL), true);*/
-    LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
+    LoadTexture(RESOURCE_FOLDER"tiles_spritesheet2.png");
 }
 
 ShaderProgram Setup(){
@@ -700,9 +698,9 @@ void Render(ShaderProgram* program){
 
 void setupSound(){
     Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 4096 );
-    pewpew = Mix_LoadWAV(RESOURCE_FOLDER"Laser.wav");
+    pewpew = Mix_LoadWAV(RESOURCE_FOLDER"Bounce.wav");
     
-    music = Mix_LoadMUS("Clockwork_Grey_Interlude.mp3");
+    music = Mix_LoadMUS("Clockwork_Grey_Interlude.mp3");//BlackTears.mp3
     Mix_PlayMusic(music, -1);
 }
 
@@ -710,7 +708,7 @@ int main(int argc, char *argv[]){
     state = STATE_GAME_LEVEL;
     
     ShaderProgram program = Setup();
-    //setupSound();
+    setupSound();
     
     done = false;
     while (!done) {
@@ -725,8 +723,8 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < menuEntities.size(); i++) {
         menuEntities[i].~Entity();
     }
-    //Mix_FreeChunk(someSound);
-    //Mix_FreeMusic(music);
+    Mix_FreeChunk(pewpew);
+    Mix_FreeMusic(music);
     SDL_Quit();
     return 0;
 }
