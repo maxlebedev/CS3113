@@ -21,7 +21,7 @@ x(x), y(y), width(width), height(height) {
     rightContact = false;
 //    topContact = false;
     bottomContact = false;
-
+ 
     godmode = false;
 }
 
@@ -65,11 +65,15 @@ void Entity::Update(float elapsed){
         float diffx = xmid() - player->xmid();
         float diffy = ymid() - player->ymid();
         float distance = sqrtf((diffx*diffx)+(diffy*diffy));
-        if (distance < 1.5f) {
+        if (distance < 4.5f) {
             velocity_y = -0.5f * diffy;
             velocity_x = -0.5f * diffx;
             y += velocity_y * FIXED_TIMESTEP;
             x += velocity_x * FIXED_TIMESTEP;
+        }
+        else{
+            this->isAlive = false;
+            this->~Entity();
         }
     }
     
@@ -151,15 +155,13 @@ void Entity::uncollide(Entity other){
         //bottom right coner
         float xdiff = other.right()-left();
         float ydiff = top()-other.bottom();
-        if (xdiff < ydiff) {
-            //push right
+        if (xdiff < ydiff) {//push right
             x = other.right() + COLLISION_OFFSET;
             velocity_x = 0;
             leftContact = true;
             rightContact = false;
         }
-        else{
-            //push down
+        else{//push down
             y = other.bottom() - height - COLLISION_OFFSET;
             velocity_y = 0;
             velocity_x = 0;
@@ -169,22 +171,19 @@ void Entity::uncollide(Entity other){
         //bottom left coner
         float xdiff = right()-other.left();
         float ydiff = top()-other.bottom();
-        if (xdiff < ydiff) {
-            //push left
+        if (xdiff < ydiff) {//push left
             x = other.left() - width - COLLISION_OFFSET;
             velocity_x = 0;
             rightContact = true;
             leftContact = false;
         }
-        else{
-            //push down
+        else{//push down
             y = other.bottom() - height - COLLISION_OFFSET;
             velocity_y = 0;
             velocity_x = 0;
         }
     }
 }
-//*/
 
 
 void Entity::Draw(ShaderProgram* program){
